@@ -1,0 +1,10 @@
+
+
+.vscode/
+
+*.engine
+
+neural_net/src/yolov5.cpp
+
+build/
+cmake-build-debug/*

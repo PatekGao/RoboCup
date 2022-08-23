@@ -1,0 +1,10 @@
+*.json
+
+*.jpg
+*.png
+*.jpge
+
+*.zip
+
+notebooks/output/*
+!.gitkeep

@@ -1,0 +1,7 @@
+jupyter
+opencv-python
+matplotlib
+torch
+torchvision
+pycocotools
+detectron2
