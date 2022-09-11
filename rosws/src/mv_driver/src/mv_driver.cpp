@@ -7,14 +7,11 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <librealsense2/rs.hpp>
 #include <iostream>
-#include<string>
-#include <math.h>
 #include <pcl/point_types.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/visualization/cloud_viewer.h>
 
 //lib
-#include <librealsense2/rs.hpp>
 #include<librealsense2/rsutil.h>
 #include <librealsense2/hpp/rs_processing.hpp>
 #include <librealsense2/hpp/rs_types.hpp>
@@ -167,8 +164,10 @@ void get_img(ros::NodeHandle nh)
 
 		//create cv::Mat from rs2::frame
 		Mat depth_;
-		Mat color(Size(640, 480), CV_8UC3, (void*)color_frame.get_data(), Mat::AUTO_STEP);
-		Mat deep(Size(640, 480), CV_16UC1, (void*)depth_frame.get_data(), Mat::AUTO_STEP);
+		Mat color(Size(640, 480), CV_8UC3);
+        memcpy(color.data, color_frame.get_data(), 921600);
+		Mat deep(Size(640, 480), CV_16UC1);
+        memcpy(deep.data, depth_frame.get_data(), 614400);
 	
 		Mat dst3(Size(640, 480), CV_16UC1);
 		ushort* p;
