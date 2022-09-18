@@ -26,4 +26,4 @@
 * enhanceMeasure.py - 对测量赛项数据集执行缩放增强
 * measureDemo.ipynb - 测量赛项原理演示demo
 * shot.py - 数据集拍摄工具
-* train.py - MaskRCNN训练笔记本
+* train.ipynb - MaskRCNN训练笔记本
