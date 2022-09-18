@@ -20,8 +20,8 @@
 
 #define USE_FP16  // set USE_INT8 or USE_FP16 or USE_FP32
 #define DEVICE 0  // GPU id
-#define NMS_THRESH 0.4
-#define CONF_THRESH 0.2
+#define NMS_THRESH 0.2
+#define CONF_THRESH 0.1
 #define BATCH_SIZE 1
 #define MAX_IMAGE_INPUT_SIZE_THRESH 3000 * 3000 // ensure it exceed the maximum size in the input images !
 
@@ -324,6 +324,7 @@ void imageCallback(const rc_msgs::raw_img::ConstPtr &msg) {
     if (!isIdentify) {
         return;
     }
+
     rc_msgs::results Result;
     cv::Mat img = cv_bridge::toCvCopy(msg->color, sensor_msgs::image_encodings::BGR8)->image;
     Result.depth = msg->color;

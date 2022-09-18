@@ -122,32 +122,32 @@ void get_img(ros::NodeHandle nh)
     }
     change_sensor_option(sensors[0]);
 
-	rs2::pipeline pipe;     //Contruct a pipeline which abstracts the device
-	rs2::config cfg;    //Create a configuration for configuring the pipeline with a non default profile
+    rs2::pipeline pipe;     //Contruct a pipeline which abstracts the device
+    rs2::config cfg;    //Create a configuration for configuring the pipeline with a non default profile
 
-	cfg.enable_stream(RS2_STREAM_COLOR, 640, 480, RS2_FORMAT_BGR8, 30);
-	cfg.enable_stream(RS2_STREAM_DEPTH, 640, 480, RS2_FORMAT_Z16, 30);
+    cfg.enable_stream(RS2_STREAM_COLOR, 640, 480, RS2_FORMAT_BGR8, 30);
+    cfg.enable_stream(RS2_STREAM_DEPTH, 640, 480, RS2_FORMAT_Z16, 30);
 
-	rs2::pipeline_profile selection = pipe.start(cfg);
+    rs2::pipeline_profile selection = pipe.start(cfg);
 //    auto depth_stream=selection.get_stream(RS2_STREAM_DEPTH).as<rs2::video_stream_profile>();
 //    auto i=depth_stream.get_intrinsics();
-	rs2_stream align_to = RS2_STREAM_COLOR;
-	rs2::align align(align_to);
+    rs2_stream align_to = RS2_STREAM_COLOR;
+    rs2::align align(align_to);
     //cout<<"width:"<<i.width<<"height:"<<i.height<<"ppx:"<<i.ppx<<"ppy:"<<i.ppy<<"fx:"<<i.fx<<"fy:"<<i.fy<<"dis model:"<<i.model<<endl;
 
 
-	while(ros::ok())
-	{
-		rs2::frameset frames;
-		frames = pipe.wait_for_frames();
+    while(ros::ok())
+    {
+        rs2::frameset frames;
+        frames = pipe.wait_for_frames();
         rs2::pointcloud pc;
         rs2::points points;
 
-		auto processed = align.process(frames);
-		
-		//Get each frame
-		auto color_frame = processed.get_color_frame();
-		auto depth_frame = processed.get_depth_frame();
+        auto processed = align.process(frames);
+
+        //Get each frame
+        auto color_frame = processed.get_color_frame();
+        auto depth_frame = processed.get_depth_frame();
         points = pc.calculate(depth_frame);
         auto prof=depth_frame.get_profile().as<rs2::video_stream_profile>();
         auto i=prof.get_intrinsics();
@@ -162,59 +162,59 @@ void get_img(ros::NodeHandle nh)
 //        {
 //        }
 
-		//create cv::Mat from rs2::frame
-		Mat depth_;
-		Mat color(Size(640, 480), CV_8UC3);
+        //create cv::Mat from rs2::frame
+        Mat depth_;
+        Mat color(Size(640, 480), CV_8UC3);
         memcpy(color.data, color_frame.get_data(), 921600);
-		Mat deep(Size(640, 480), CV_16UC1);
+        Mat deep(Size(640, 480), CV_16UC1);
         memcpy(deep.data, depth_frame.get_data(), 614400);
-	
-		Mat dst3(Size(640, 480), CV_16UC1);
-		ushort* p;
-		ushort* q;
 
-		//float scale = frames.get_depth_scale();
-		for (int y = 0; y < 480; y++)
-		{
-			q = deep.ptr<ushort>(y);
-			for (int x = 0; x < 640; x++)
-			{
-				//dst->imageData[y * depth_info.height + x] = depth__data[y * depth_info.height + x];
-				ushort d = 0.125 * q[x];
-				//cout << "d:  " << d << endl;
-				p = dst3.ptr<ushort>(y);
+        Mat dst3(Size(640, 480), CV_16UC1);
+        ushort* p;
+        ushort* q;
 
-				//距离在0.2m至1.2	int k = 0;m之间
+        //float scale = frames.get_depth_scale();
+        for (int y = 0; y < 480; y++)
+        {
+            q = deep.ptr<ushort>(y);
+            for (int x = 0; x < 640; x++)
+            {
+                //dst->imageData[y * depth_info.height + x] = depth__data[y * depth_info.height + x];
+                ushort d = 0.125 * q[x];
+                //cout << "d:  " << d << endl;
+                p = dst3.ptr<ushort>(y);
 
-				if (d > 0)
-				{
-					p[x] = 255 - 0.255 * (d - 200);
-					//cout << "p:  " << p[x] << endl;
-				}
-				else
-					p[x] = 0;
-			}
-		}
-		dst3.convertTo(depth_, CV_8UC1, 1);
-	
-		//  imshow("Display Image", color);
-		// waitKey(1);
-		// imshow("Display deep", depth_);
-		// waitKey(1);
+                //距离在0.2m至1.2	int k = 0;m之间
+
+                if (d > 0)
+                {
+                    p[x] = 255 - 0.255 * (d - 200);
+                    //cout << "p:  " << p[x] << endl;
+                }
+                else
+                    p[x] = 0;
+            }
+        }
+        dst3.convertTo(depth_, CV_8UC1, 1);
+
+        //  imshow("Display Image", color);
+        // waitKey(1);
+        // imshow("Display deep", depth_);
+        // waitKey(1);
 
         toROSMsg(*pcl_points,cloudmsg);
         sensor_msgs::ImagePtr color_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", color).toImageMsg();
-   		color_msg->header.stamp = ros::Time::now();
-		sensor_msgs::ImagePtr depth_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", depth_).toImageMsg();
-    	depth_msg->header.stamp = ros::Time::now();
-    	img_msg.color = *color_msg;
-		img_msg.depth = *depth_msg;
-	
-		img_pub.publish(img_msg);
+        color_msg->header.stamp = ros::Time::now();
+        sensor_msgs::ImagePtr depth_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", depth_).toImageMsg();
+        depth_msg->header.stamp = ros::Time::now();
+        img_msg.color = *color_msg;
+        img_msg.depth = *depth_msg;
+
+        img_pub.publish(img_msg);
         cloud_pub.publish(cloudmsg);
-		//cout<<"pub img!"<<endl;
-       // cout<<"width:"<<i.width<<"height:"<<i.height<<"ppx:"<<i.ppx<<"ppy:"<<i.ppy<<"fx:"<<i.fx<<"fy:"<<i.fy<<"dis model:"<<i.model<<endl;
-	}
+        //cout<<"pub img!"<<endl;
+        // cout<<"width:"<<i.width<<"height:"<<i.height<<"ppx:"<<i.ppx<<"ppy:"<<i.ppy<<"fx:"<<i.fx<<"fy:"<<i.fy<<"dis model:"<<i.model<<endl;
+    }
     change_sensor_option(sensors[0], 0);
 }
 
@@ -225,9 +225,9 @@ int main (int argc, char** argv)
     //声明节点句柄
     ros::NodeHandle nh;
     cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/cloud", 10);
-	img_pub=nh.advertise<rc_msgs::raw_img>("/raw_img",10);
-	ros::Duration(1).sleep();
-	while(ros::ok())
-		get_img(nh);
-	nh.shutdown();
+    img_pub=nh.advertise<rc_msgs::raw_img>("/raw_img",10);
+    ros::Duration(1).sleep();
+    while(ros::ok())
+        get_img(nh);
+    nh.shutdown();
 }

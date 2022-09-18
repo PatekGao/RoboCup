@@ -16,7 +16,7 @@
 #include <mutex>
 #include <fstream>
 
-#define JUDGE_SYSTEM
+//#define JUDGE_SYSTEM
 
 std::string mode = "None";
 std::string filename = std::string(OUTPUT_PATH) + "NUAA-ZSWW-R";
