@@ -33,11 +33,8 @@ set(QT_UI_FILES
 #set(Qt5_Widgets "/home/bismarck/Qt5.9.9/5.9.9/gcc_64/lib/cmake/Qt5Widgets")
 
 find_package(Qt5 COMPONENTS Core Widgets Gui Core REQUIRED)
-find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge image_transport rc_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge image_transport rc_msgs dynamic_reconfigure)
 find_package(OpenCV 4 REQUIRED)
-
-
-
 
 # 设置include路径
 include_directories(

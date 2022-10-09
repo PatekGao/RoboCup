@@ -22,7 +22,7 @@ add_message_files(
         calibrateResult.msg
 )
 generate_dynamic_reconfigure_options(
-        cfg/My_cfg.cfg
+        cfg/stepConfig.cfg
 )
 generate_messages(
         DEPENDENCIES
