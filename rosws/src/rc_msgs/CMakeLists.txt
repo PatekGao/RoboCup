@@ -8,6 +8,8 @@ find_package(
         roscpp
         sensor_msgs
         std_msgs
+        dynamic_reconfigure
+        rospy
 )
 
 add_message_files(
@@ -19,7 +21,9 @@ add_message_files(
         step.msg
         calibrateResult.msg
 )
-
+generate_dynamic_reconfigure_options(
+        cfg/My_cfg.cfg
+)
 generate_messages(
         DEPENDENCIES
         sensor_msgs#   std_msgs

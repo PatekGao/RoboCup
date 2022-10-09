@@ -36,6 +36,9 @@ find_package(Qt5 COMPONENTS Core Widgets Gui Core REQUIRED)
 find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge image_transport rc_msgs)
 find_package(OpenCV 4 REQUIRED)
 
+
+
+
 # 设置include路径
 include_directories(
         ${Qt5Widgets_INCLUDE_DIRS}

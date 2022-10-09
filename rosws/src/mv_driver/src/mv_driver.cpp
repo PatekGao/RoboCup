@@ -101,6 +101,19 @@ void setToDefault(const rs2::sensor& sensor) {
             }
         }
     }
+    if(sensor.supports(RS2_OPTION_EXPOSURE)) {
+        /*try {
+            sensor.set_option(RS2_OPTION_CONFIDENCE_THRESHOLD, 0.0);
+        }
+        catch(const rs2::error& e) {
+            std::cerr << "Failed to set option " << ". (" << e.what() << ")" << std::endl;
+        }*/
+        cout<<"support"<<endl;
+    }
+    else
+    {
+        cout<<"don't support"<<endl;
+    }
 }
 
 void get_img(ros::NodeHandle nh)

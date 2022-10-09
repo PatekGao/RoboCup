@@ -5,6 +5,10 @@
 #include <sstream>
 #include "ui/qnode.hpp"
 #include "rc_msgs/results.h"
+#include "rc_msgs/My_cfgConfig.h"
+#include <dynamic_reconfigure/server.h>
+#include <dynamic_reconfigure/client.h>
+
 
 namespace ui {
 
@@ -13,6 +17,9 @@ namespace ui {
     bool status[3] = {false, false, false};        // 存储当前三个节点连接状态，顺序为mv、nn、main
     bool stf[3] = {false, false, false};        //发送用status
     std::string mode{"mode"};
+
+
+
 
 // qt多线程初始化
     QNode::QNode(int argc, char **argv) :
@@ -29,7 +36,11 @@ namespace ui {
         }
         wait();
     }
+    void QNode::callback(dynamic_cup::My_cfgConfig &config, uint32_t level) {
+        step=config.int_param;
+        mode=config.str_param;
 
+    }
 // 初始化ros服务
     bool QNode::init() {
         rotateImg = cv::imread(std::string(RESOURCE_PATH) + "rotate.png");
@@ -58,10 +69,17 @@ namespace ui {
         stepPublisher = n.advertise<rc_msgs::step>("/step", 10);
         indentifyControler = n.advertise<std_msgs::Bool>("/isIdentify", 1);
 
+
         ros::Rate loop_rate(30);
         int count = 0;
         int stt = 0;
         int end = 8;
+        boost::function<void(const dynamic_cup::My_cfgConfig&)> call=boost::bind(&QNode::callback, this, _1);
+        client = dynamic_reconfigure::Client<dynamic_cup::My_cfgConfig>("/config", call);
+
+        dynamic_reconfigure::Client<dynamic_cup::My_cfgConfig>::CallbackType f;
+        f = boost::bind(&callback, _1, _2);
+        server.setCallback(f);
 
         // 是否在启动后就开始识别
         std_msgs::Bool identify;
@@ -149,6 +167,8 @@ namespace ui {
         std_msgs::Bool identify;
         identify.data = true;
         indentifyControler.publish(identify);
+        config.int_param=step;
+        client.setConfiguration(config);
     }
 
 // 日志记录函数
@@ -229,9 +249,13 @@ namespace ui {
             if (t == 2) {
                 step++;
                 log(Warn, std::string("Rotating time out!!!"));
+                config.int_param=step;
+                client.setConfiguration(config);
             } else if (t == 3) {
                 step++;
                 log(Warn, std::string("Waiting for rotating time out!!!"));
+                config.int_param=step;
+                client.setConfiguration(config);
             } else if (t == 1) {
                 if (step == 3 || step == 6) {
                     std_msgs::Bool identify;
@@ -239,6 +263,8 @@ namespace ui {
                     indentifyControler.publish(identify);
                 }
                 step++;
+                config.int_param=step;
+                client.setConfiguration(config);
             }
             //log(Info,std::string("Now MSE: ")+std::to_string(rotate.lastMSE));
         }
@@ -270,6 +296,8 @@ namespace ui {
                 identify.data = false;
                 indentifyControler.publish(identify);
                 // 之后在这里加上识别完成后显示结果的东西
+                config.int_param=step;
+                client.setConfiguration(config);
             }
         } else {
             if (step == 1 || step == 4 || step == 7) {
@@ -282,6 +310,8 @@ namespace ui {
                 std_msgs::Bool identify;
                 identify.data = false;
                 indentifyControler.publish(identify);
+                config.int_param=step;
+                client.setConfiguration(config);
             }
         }
     }

@@ -28,7 +28,9 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
-
+#include "rc_msgs/My_cfgConfig.h"
+#include <dynamic_reconfigure/server.h>
+#include <dynamic_reconfigure/client.h>
 #include <iostream>
 #include<vector>
 
@@ -44,22 +46,30 @@ void stepCallback(const rc_msgs::step::ConstPtr &msg);
 
 void identifyCallback(const std_msgs::Bool::ConstPtr &msg);
 
+void callback(dynamic_cup::My_cfgConfig &config, uint32_t level);
+
 ros::Publisher res_pub;
 bool isIdentify = false;
 int16_t step;
 string mode;
 double x11, x22, y11, y22;
 rc_msgs::calibrateResult res;
+dynamic_reconfigure::Client<dynamic_cup::My_cfgConfig> client("/config");
+
 
 void identifyCallback(const std_msgs::Bool::ConstPtr &msg) {
     isIdentify = msg->data;
 }
 
-void stepCallback(const rc_msgs::step::ConstPtr &msg) {
+/*void stepCallback(const rc_msgs::step::ConstPtr &msg) {
     step = msg->data;
     mode = msg->mode;
-}
+}*/
+void callback(dynamic_cup::My_cfgConfig &config, uint32_t level) {
+    step=config.int_param;
+    mode=config.str_param;
 
+}
 
 const double camera_factor = 5000;
 const double cx = 320;
@@ -3793,6 +3803,7 @@ int main(int argc, char **argv) {
     ros::Subscriber Identify_sub = n.subscribe("/isIdentify", 10, identifyCallback);
     res_pub = n.advertise<rc_msgs::calibrateResult>("/calibrateResult", 10);
     ros::Rate loop_rate(1);
+
     while (ros::ok()) {
         ros::spinOnce();
         loop_rate.sleep();

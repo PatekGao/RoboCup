@@ -34,7 +34,9 @@
 #include "rc_msgs/calibrateResult.h"
 #include "std_msgs/Bool.h"
 #include <mutex>
-
+#include "rc_msgs/My_cfgConfig.h"
+#include <dynamic_reconfigure/server.h>
+#include <dynamic_reconfigure/client.h>
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
@@ -51,7 +53,8 @@ public:
 	cv::Mat colorImg, depthImg;
 	turn2 rotate;		// 修改此处切换旋转判定方案，turn为连续判定，turn2为MSE和判定
     std::mutex imageMtx;
-
+    dynamic_reconfigure::Client<dynamic_cup::My_cfgConfig> client;
+    dynamic_cup::My_cfgConfig config;
 	QNode(int argc, char** argv );
 	virtual ~QNode();
     bool init();
@@ -62,8 +65,8 @@ public:
 	void nnBeatCallback(const std_msgs::Bool::ConstPtr& msg);
 	void endCallback(const std_msgs::Bool::ConstPtr& msg);
     void deskCallback(const rc_msgs::calibrateResult::ConstPtr& msg);
-
-	/*********************
+    void callback(dynamic_cup::My_cfgConfig &config, uint32_t level);
+    /*********************
 	** Logging
 	**********************/
 	enum LogLevel {

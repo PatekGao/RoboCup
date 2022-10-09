@@ -15,9 +15,11 @@
 #include <atomic>
 #include <mutex>
 #include <fstream>
+#include "rc_msgs/My_cfgConfig.h"
+#include <dynamic_reconfigure/server.h>
+//#include <dynamic_reconfigure/client.h>
 
 //#define JUDGE_SYSTEM
-
 std::string mode = "None";
 std::string filename = std::string(OUTPUT_PATH) + "NUAA-ZSWW-R";
 std::atomic<int> step(0);
@@ -38,8 +40,34 @@ void stepCallback(const rc_msgs::step::ConstPtr &msg);
 void isIdentifyCallback(const std_msgs::Bool::ConstPtr &msg);
 void calibrateCallback(const rc_msgs::calibrateResult &msg);
 void resultCallback(const rc_msgs::results &msg);
-
+void timeoutControl(const std::string& _mode, int _step);
 Interface* process = nullptr;
+
+
+dynamic_reconfigure::Server<dynamic_cup::My_cfgConfig> server;
+
+
+void callback(dynamic_cup::My_cfgConfig &config, uint32_t level) {
+    modeMtx.lock();
+    if (mode == "None") {
+        modeMtx.unlock();
+        if (config.str_param == "identify") {
+            process = new Identify();            //将整体的类切换至 识别or测量
+        } else {
+            process = new Measure();
+        }
+        controller = std::thread(timeoutControl, config.str_param, config.int_param);
+    } else {
+        modeMtx.unlock();
+    }
+    modeMtx.lock();
+    mode =  config.str_param;                        //给全局变量mode给予读到的mode类型，下次就不进前面的判断了
+    modeMtx.unlock();
+    if (config.int_param == 1 || config.int_param == 4 || config.int_param == 7 ||  config.int_param == 8) {
+        step =  config.int_param;
+    }
+    ROS_INFO("Now:  step: %d    ,mode: %s",config.int_param,mode.c_str());
+}
 
 int main (int argc, char **argv) {
     ros::init(argc, argv, "scheduler");
@@ -48,11 +76,18 @@ int main (int argc, char **argv) {
     endPub = nh.advertise<std_msgs::Bool>("/ifend", 1);
     beatPub = nh.advertise<std_msgs::Bool>("/main_beat", 1);
 
-    ros::Subscriber stepSub = nh.subscribe("/step", 1, stepCallback);
+    //ros::Subscriber stepSub = nh.subscribe("/step", 1, stepCallback);
     ros::Subscriber isIdentifySub = nh.subscribe("/isIdentify", 1, isIdentifyCallback);
     ros::Subscriber calibrateSub = nh.subscribe("/calibrateResult", 3, calibrateCallback);
     ros::Subscriber resultSub = nh.subscribe("/rcnn_results", 3, resultCallback);
 
+
+    dynamic_reconfigure::Server<dynamic_cup::My_cfgConfig>::CallbackType f;
+    f = boost::bind(&callback, _1, _2);
+    server.setCallback(f);
+
+    //ROS_INFO("Spinning node");
+    //ros::spin();
     std::thread beatThread(beatSend);
 
     ros::MultiThreadedSpinner spinner(2);
@@ -93,17 +128,20 @@ void endProcess() {
     std_msgs::Bool msg;
     mtx.lock();
     process->calcResult();
-    std::string res = process->getResult();
+    std::string res = process->getResult();      //将process中输出的结果导出
     mtx.unlock();
     saveResult(res);
     msg.data = true;
     endPub.publish(msg);
+
     mtx.lock();
     delete process;
     process = nullptr;
     mtx.unlock();
+
     step = 0;
     isCalibrate = false;
+
     modeMtx.lock();
     mode = "None";
     modeMtx.unlock();
@@ -115,13 +153,18 @@ void timeoutControl(const std::string& _mode, int _step) {
         if (_step == 1) {
             std_msgs::Bool msg;
             filename += "2.txt";
+
             process->dt = Interface::SQUIRE55;
             ros::Duration(15).sleep();
+
             mtx.lock();
             process->calcResult();
             mtx.unlock();
+
+
             msg.data = false;
             endPub.publish(msg);
+
             ros::Duration(20).sleep();
             mtx.lock();
             process->calcResult();
@@ -151,6 +194,7 @@ void timeoutControl(const std::string& _mode, int _step) {
     }
 }
 
+
 void beatSend() {
     while(is_running) {
         std_msgs::Bool beat;
@@ -159,13 +203,13 @@ void beatSend() {
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
-
+/*
 void stepCallback(const rc_msgs::step::ConstPtr &msg) {
     modeMtx.lock();
     if (mode == "None") {
         modeMtx.unlock();
         if (msg->mode == "identify") {
-            process = new Identify();
+            process = new Identify();            //将整体的类切换至 识别or测量
         } else {
             process = new Measure();
         }
@@ -174,13 +218,13 @@ void stepCallback(const rc_msgs::step::ConstPtr &msg) {
         modeMtx.unlock();
     }
     modeMtx.lock();
-    mode = msg->mode;
+    mode = msg->mode;                        //给全局变量mode给予读到的mode类型，下次就不进前面的判断了
     modeMtx.unlock();
     if (msg->data == 1 || msg->data == 4 || msg->data == 7 || msg->data == 8) {
         step = msg->data;
     }
 }
-
+*/
 void isIdentifyCallback(const std_msgs::Bool::ConstPtr &msg) {
     if (msg->data != isCalibrate) {
         if (msg->data) {

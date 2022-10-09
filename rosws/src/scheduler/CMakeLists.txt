@@ -11,6 +11,7 @@ find_package(
         std_msgs
         cv_bridge
         image_transport
+        dynamic_reconfigure
 )
 find_package(OpenCV 4 REQUIRED)
 find_package(Boost REQUIRED)
@@ -31,7 +32,7 @@ include_directories(
         ${Boost_INCLUDE_DIRS}
 )
 
-add_executable(${PROJECT_NAME}_node src/main.cpp src/measure.cpp src/identify.cpp src/interface.cpp src/tcpClient.cpp)
+add_executable(${PROJECT_NAME}_node src/main.cpp src/measure.cpp src/identify.cpp src/interface.cpp src/tcpClient.cpp )
 
 
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
