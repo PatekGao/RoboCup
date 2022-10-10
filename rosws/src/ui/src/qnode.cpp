@@ -6,8 +6,7 @@
 #include "ui/qnode.hpp"
 #include "rc_msgs/results.h"
 #include "rc_msgs/stepConfig.h"
-#include <dynamic_reconfigure/server.h>
-#include <dynamic_reconfigure/client.h>
+
 
 
 namespace ui {

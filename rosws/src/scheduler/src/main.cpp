@@ -15,7 +15,7 @@
 #include <atomic>
 #include <mutex>
 #include <fstream>
-#include "rc_msgs/My_cfgConfig.h"
+#include "rc_msgs/stepConfig.h"
 #include <dynamic_reconfigure/server.h>
 //#include <dynamic_reconfigure/client.h>
 
@@ -44,29 +44,29 @@ void timeoutControl(const std::string& _mode, int _step);
 Interface* process = nullptr;
 
 
-dynamic_reconfigure::Server<dynamic_cup::My_cfgConfig> server;
+dynamic_reconfigure::Server<rc_msgs::stepConfig> server;
 
 
-void callback(dynamic_cup::My_cfgConfig &config, uint32_t level) {
+void callback(rc_msgs::stepConfig &config, uint32_t level) {
     modeMtx.lock();
     if (mode == "None") {
         modeMtx.unlock();
-        if (config.str_param == "identify") {
+        if (config.mode == "identify") {
             process = new Identify();            //将整体的类切换至 识别or测量
         } else {
             process = new Measure();
         }
-        controller = std::thread(timeoutControl, config.str_param, config.int_param);
+        controller = std::thread(timeoutControl, config.mode, config.step);
     } else {
         modeMtx.unlock();
     }
     modeMtx.lock();
-    mode =  config.str_param;                        //给全局变量mode给予读到的mode类型，下次就不进前面的判断了
+    mode =  config.mode;                        //给全局变量mode给予读到的mode类型，下次就不进前面的判断了
     modeMtx.unlock();
-    if (config.int_param == 1 || config.int_param == 4 || config.int_param == 7 ||  config.int_param == 8) {
-        step =  config.int_param;
+    if (config.step == 1 || config.step == 4 || config.step == 7 ||  config.step == 8) {
+        step =  config.step;
     }
-    ROS_INFO("Now:  step: %d    ,mode: %s",config.int_param,mode.c_str());
+    ROS_INFO("Now:  step: %d    ,mode: %s",config.step,config.mode.c_str());
 }
 
 int main (int argc, char **argv) {
@@ -82,7 +82,7 @@ int main (int argc, char **argv) {
     ros::Subscriber resultSub = nh.subscribe("/rcnn_results", 3, resultCallback);
 
 
-    dynamic_reconfigure::Server<dynamic_cup::My_cfgConfig>::CallbackType f;
+    dynamic_reconfigure::Server<rc_msgs::stepConfig>::CallbackType f;
     f = boost::bind(&callback, _1, _2);
     server.setCallback(f);
 

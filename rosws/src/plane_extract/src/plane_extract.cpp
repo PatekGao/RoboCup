@@ -9,7 +9,6 @@
 #include <cv_bridge/cv_bridge.h>
 #include <librealsense2/rs.hpp>
 #include <librealsense2/rsutil.h>
-
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/ModelCoefficients.h>
@@ -28,7 +27,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
-#include "rc_msgs/My_cfgConfig.h"
+#include "rc_msgs/stepConfig.h"
 #include <dynamic_reconfigure/server.h>
 #include <dynamic_reconfigure/client.h>
 #include <iostream>
@@ -46,7 +45,7 @@ void stepCallback(const rc_msgs::step::ConstPtr &msg);
 
 void identifyCallback(const std_msgs::Bool::ConstPtr &msg);
 
-void callback(dynamic_cup::My_cfgConfig &config, uint32_t level);
+void callback(rc_msgs::stepConfig &config);
 
 ros::Publisher res_pub;
 bool isIdentify = false;
@@ -54,7 +53,9 @@ int16_t step;
 string mode;
 double x11, x22, y11, y22;
 rc_msgs::calibrateResult res;
-dynamic_reconfigure::Client<dynamic_cup::My_cfgConfig> client("/config");
+
+rc_msgs::stepConfig config;
+dynamic_reconfigure::Client<rc_msgs::stepConfig> client("/config",boost::bind(&callback, config));
 
 
 void identifyCallback(const std_msgs::Bool::ConstPtr &msg) {
@@ -65,9 +66,9 @@ void identifyCallback(const std_msgs::Bool::ConstPtr &msg) {
     step = msg->data;
     mode = msg->mode;
 }*/
-void callback(dynamic_cup::My_cfgConfig &config, uint32_t level) {
-    step=config.int_param;
-    mode=config.str_param;
+void callback(rc_msgs::stepConfig &config) {
+    step=config.step;
+    mode=config.mode;
 
 }
 
@@ -3798,7 +3799,7 @@ int main(int argc, char **argv) {
 
     ros::init(argc, argv, "plane_extract"); // 节点名称
     ros::NodeHandle n;
-    ros::Subscriber step_sub = n.subscribe("/step", 10, stepCallback);
+    //ros::Subscriber step_sub = n.subscribe("/step", 10, stepCallback);
     ros::Subscriber img_sub = n.subscribe("/cloud", 10, cloudCallback);
     ros::Subscriber Identify_sub = n.subscribe("/isIdentify", 10, identifyCallback);
     res_pub = n.advertise<rc_msgs::calibrateResult>("/calibrateResult", 10);
