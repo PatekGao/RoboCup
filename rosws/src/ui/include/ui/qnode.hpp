@@ -91,7 +91,7 @@ private:
 	int init_argc;
 	char** init_argv;
 
-	ros::Publisher stepPublisher;
+	//ros::Publisher stepPublisher;
     ros::Publisher indentifyControler;
     QStringListModel logging_model;
     std::vector<cv::Point> lastDesk;

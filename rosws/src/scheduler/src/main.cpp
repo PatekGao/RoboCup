@@ -124,6 +124,7 @@ void saveResult(const std::string& res) {
 }
 
 void endProcess() {
+    rc_msgs::stepConfig config;
     finish = true;
     std_msgs::Bool msg;
     mtx.lock();
@@ -131,6 +132,10 @@ void endProcess() {
     std::string res = process->getResult();      //将process中输出的结果导出
     mtx.unlock();
     saveResult(res);
+
+    step++;
+    config.step=step;
+    server.updateConfig(config);
     msg.data = true;
     endPub.publish(msg);
 
@@ -148,6 +153,7 @@ void endProcess() {
 }
 
 void timeoutControl(const std::string& _mode, int _step) {
+    rc_msgs::stepConfig config;
     startTimer();
     if (_mode == "identify") {
         if (_step == 1) {
@@ -161,7 +167,9 @@ void timeoutControl(const std::string& _mode, int _step) {
             process->calcResult();
             mtx.unlock();
 
-
+            step++;
+            config.step=step;
+            server.updateConfig(config);
             msg.data = false;
             endPub.publish(msg);
 
@@ -169,9 +177,14 @@ void timeoutControl(const std::string& _mode, int _step) {
             mtx.lock();
             process->calcResult();
             mtx.unlock();
+
+            step++;
+            config.step=step;
+            server.updateConfig(config);
             msg.data = false;
             endPub.publish(msg);
             ros::Duration(35).sleep();
+
             endProcess();
         } if (_step == 7) {
             process->dt = Interface::CIRCLE60;

@@ -38,6 +38,7 @@ namespace ui {
         wait();
     }
     void QNode::callback(const rc_msgs::stepConfig &config) {
+
         step=config.step;
         mode=config.mode;
 
@@ -67,7 +68,7 @@ namespace ui {
         ros::Subscriber nnBeatSub = n.subscribe("/nn_beat", 1, &ui::QNode::nnBeatCallback, this);
         ros::Subscriber endSub = n.subscribe("/ifend", 1, &ui::QNode::endCallback, this);
         ros::Subscriber deskSub = n.subscribe("/calibrateResult", 1, &ui::QNode::deskCallback, this);
-        stepPublisher = n.advertise<rc_msgs::step>("/step", 10);
+        //stepPublisher = n.advertise<rc_msgs::step>("/step", 10);
         indentifyControler = n.advertise<std_msgs::Bool>("/isIdentify", 1);
 
 
@@ -86,11 +87,8 @@ namespace ui {
             if (step != stt && step != end) {
                 stt = step;
                 rotate.ss = step;
-                rc_msgs::step msg;
-                msg.data = (short)step;
-                msg.mode = mode;
-                stepPublisher.publish(msg);
-                log(Info, std::string("Now step: ") + std::to_string(msg.data));
+
+                log(Info, std::string("Now step: ") + std::to_string(config.step));
                 std::string ll;
                 switch (step) {
                     case -1:
@@ -282,21 +280,18 @@ namespace ui {
     void QNode::endCallback(const std_msgs::Bool::ConstPtr &msg) {
         //log(Info,std::string("recive ifend"));
         if (msg->data) {
-            if (step == 7) {
+            if (step == 8) {
                 Q_EMIT complete();        // 释放UI中锁定资源
-                step = 8;
                 log(Info, std::string("ifend  true: ") + std::to_string(step));
 
                 std_msgs::Bool identify;
                 identify.data = false;
                 indentifyControler.publish(identify);
                 // 之后在这里加上识别完成后显示结果的东西
-                config.step=step;
-                client.setConfiguration(config);
+
             }
         } else {
-            if (step == 1 || step == 4 || step == 7) {
-                step++;
+            if (step == 2 || step == 5 || step == 8) {
                 rotate.updateBegin();
                 log(Info, std::string("ifend  step: ") + std::to_string(step));
                 if (step == 8) {
@@ -305,8 +300,6 @@ namespace ui {
                 std_msgs::Bool identify;
                 identify.data = false;
                 indentifyControler.publish(identify);
-                config.step=step;
-                client.setConfiguration(config);
             }
         }
     }

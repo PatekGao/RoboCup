@@ -41,7 +41,7 @@ typedef pcl::PointCloud<PointT> PointCloud;
 
 void cloudCallback(const sensor_msgs::PointCloud2::ConstPtr &msg);
 
-void stepCallback(const rc_msgs::step::ConstPtr &msg);
+//void stepCallback(const rc_msgs::step::ConstPtr &msg);
 
 void identifyCallback(const std_msgs::Bool::ConstPtr &msg);
 
