@@ -54,8 +54,7 @@ string mode;
 double x11, x22, y11, y22;
 rc_msgs::calibrateResult res;
 
-rc_msgs::stepConfig config;
-dynamic_reconfigure::Client<rc_msgs::stepConfig> client("/config",boost::bind(&callback, config));
+
 
 
 void identifyCallback(const std_msgs::Bool::ConstPtr &msg) {
@@ -3799,6 +3798,8 @@ int main(int argc, char **argv) {
 
     ros::init(argc, argv, "plane_extract"); // 节点名称
     ros::NodeHandle n;
+    rc_msgs::stepConfig config;
+    dynamic_reconfigure::Client<rc_msgs::stepConfig> client("/config",boost::bind(&callback, config));
     //ros::Subscriber step_sub = n.subscribe("/step", 10, stepCallback);
     ros::Subscriber img_sub = n.subscribe("/cloud", 10, cloudCallback);
     ros::Subscriber Identify_sub = n.subscribe("/isIdentify", 10, identifyCallback);

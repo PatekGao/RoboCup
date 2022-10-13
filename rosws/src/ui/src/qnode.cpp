@@ -46,7 +46,7 @@ namespace ui {
 // 初始化ros服务
     bool QNode::init() {
         rotateImg = cv::imread(std::string(RESOURCE_PATH) + "rotate.png");
-        ros::init(init_argc, init_argv, "ui_node");
+        //ros::init(init_argc, init_argv, "ui_node");
         if (!ros::master::check()) {
             return false;
         }
