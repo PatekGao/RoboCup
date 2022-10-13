@@ -44,44 +44,8 @@ void timeoutControl(const std::string& _mode, int _step);
 void callback(rc_msgs::stepConfig &config, uint32_t level);
 Interface* process = nullptr;
 
+dynamic_reconfigure::Server<rc_msgs::stepConfig>* server = nullptr;
 
-
-
-
-int main (int argc, char **argv) {
-    ros::init(argc, argv, "scheduler");
-    ros::NodeHandle nh;
-
-    endPub = nh.advertise<std_msgs::Bool>("/ifend", 1);
-    beatPub = nh.advertise<std_msgs::Bool>("/main_beat", 1);
-
-    //ros::Subscriber stepSub = nh.subscribe("/step", 1, stepCallback);
-    ros::Subscriber isIdentifySub = nh.subscribe("/isIdentify", 1, isIdentifyCallback);
-    ros::Subscriber calibrateSub = nh.subscribe("/calibrateResult", 3, calibrateCallback);
-    ros::Subscriber resultSub = nh.subscribe("/rcnn_results", 3, resultCallback);
-
-    dynamic_reconfigure::Server<rc_msgs::stepConfig> server;
-    dynamic_reconfigure::Server<rc_msgs::stepConfig>::CallbackType f=boost::bind(&callback,  boost::placeholders::_1, boost::placeholders::_2);
-
-    //f = boost::bind(&callback, _1, _2);
-
-    server.setCallback(f);
-
-    //ROS_INFO("Spinning node");
-    //ros::spin();
-    std::thread beatThread(beatSend);
-
-    ros::MultiThreadedSpinner spinner(2);
-    spinner.spin();
-
-    is_running = false;
-    beatThread.join();
-    controller.join();
-    delete process;
-
-
-    return 0;
-}
 
 void callback(rc_msgs::stepConfig &config, uint32_t level) {
     modeMtx.lock();
@@ -103,6 +67,41 @@ void callback(rc_msgs::stepConfig &config, uint32_t level) {
         step =  config.step;
     }
     ROS_INFO("Now:  step: %d    ,mode: %s",config.step,config.mode.c_str());
+}
+
+
+int main (int argc, char **argv) {
+    ros::init(argc, argv, "scheduler");
+    ros::NodeHandle nh;
+
+    endPub = nh.advertise<std_msgs::Bool>("/ifend", 1);
+    beatPub = nh.advertise<std_msgs::Bool>("/main_beat", 1);
+
+    //ros::Subscriber stepSub = nh.subscribe("/step", 1, stepCallback);
+    ros::Subscriber isIdentifySub = nh.subscribe("/isIdentify", 1, isIdentifyCallback);
+    ros::Subscriber calibrateSub = nh.subscribe("/calibrateResult", 3, calibrateCallback);
+    ros::Subscriber resultSub = nh.subscribe("/rcnn_results", 3, resultCallback);
+    dynamic_reconfigure::Server<rc_msgs::stepConfig> _server;
+    dynamic_reconfigure::Server<rc_msgs::stepConfig>::CallbackType f;
+
+    f = boost::bind(&callback, _1, _2);
+
+    _server.setCallback(f);
+
+    //ROS_INFO("Spinning node");
+    //ros::spin();
+    std::thread beatThread(beatSend);
+
+    ros::MultiThreadedSpinner spinner(2);
+    spinner.spin();
+
+    is_running = false;
+    beatThread.join();
+    controller.join();
+    delete process;
+
+
+    return 0;
 }
 
 inline void startTimer() {
@@ -130,7 +129,6 @@ void saveResult(const std::string& res) {
 
 void endProcess() {
     rc_msgs::stepConfig config;
-    dynamic_reconfigure::Server<rc_msgs::stepConfig> server;
     finish = true;
     std_msgs::Bool msg;
     mtx.lock();
@@ -141,7 +139,7 @@ void endProcess() {
 
     step++;
     config.step=step;
-    server.updateConfig(config);
+    server->updateConfig(config);
     msg.data = true;
     endPub.publish(msg);
 
@@ -159,7 +157,6 @@ void endProcess() {
 }
 
 void timeoutControl(const std::string& _mode, int _step) {
-    dynamic_reconfigure::Server<rc_msgs::stepConfig> server;
     rc_msgs::stepConfig config;
     startTimer();
     if (_mode == "identify") {
@@ -176,7 +173,7 @@ void timeoutControl(const std::string& _mode, int _step) {
 
             step++;
             config.step=step;
-            server.updateConfig(config);
+            server->updateConfig(config);
             msg.data = false;
             endPub.publish(msg);
 
@@ -187,7 +184,7 @@ void timeoutControl(const std::string& _mode, int _step) {
 
             step++;
             config.step=step;
-            server.updateConfig(config);
+            server->updateConfig(config);
             msg.data = false;
             endPub.publish(msg);
             ros::Duration(35).sleep();
