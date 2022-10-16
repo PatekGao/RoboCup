@@ -56,7 +56,8 @@ void callback(rc_msgs::stepConfig &config, uint32_t level) {
         } else {
             process = new Measure();
         }
-        controller = std::thread(timeoutControl, config.mode, config.step);
+        if(config.mode!="None")
+            controller = std::thread(timeoutControl, config.mode, config.step);
     } else {
         modeMtx.unlock();
     }

@@ -1,6 +1,12 @@
 <launch>
 
     <remap from="/scheduler/set_parameters" to="/config/set_parameters" />
+    <remap from="/ui_node/set_parameters" to="/config/set_parameters" />
+    <remap from="/config/parameter_updates" to="parameter_updates" />
+    <remap from="/scheduler/parameter_updates" to="parameter_updates" />
+    <remap from="/config/parameter_descriptions" to="parameter_descriptions" />
+    <remap from="/scheduler/parameter_descriptions" to="parameter_descriptions" />
+
 
     <node pkg="scheduler" type="scheduler_node" name="scheduler" output="screen"  required="true" />
     <node pkg="mv_driver" type="mv_driver_node" name="mv_driver_node" output="screen" respawn="true"/>
