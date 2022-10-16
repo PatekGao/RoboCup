@@ -83,9 +83,9 @@ int main (int argc, char **argv) {
     ros::Subscriber resultSub = nh.subscribe("/rcnn_results", 3, resultCallback);
     dynamic_reconfigure::Server<rc_msgs::stepConfig> _server;
     dynamic_reconfigure::Server<rc_msgs::stepConfig>::CallbackType f;
-
+    server = &_server;
     f = boost::bind(&callback, _1, _2);
-
+    ROS_INFO("111111111111111111");
     _server.setCallback(f);
 
     //ROS_INFO("Spinning node");

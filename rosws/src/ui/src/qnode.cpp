@@ -160,8 +160,11 @@ namespace ui {
         std_msgs::Bool identify;
         identify.data = true;
         indentifyControler.publish(identify);
+
         config.step=step;
+        config.mode=mode;
         client.setConfiguration(config);
+        ROS_INFO("Now:  step: %d    ,mode: %s",config.step,config.mode.c_str());
     }
 
 // 日志记录函数
