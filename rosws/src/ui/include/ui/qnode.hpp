@@ -63,7 +63,7 @@ public:
     void resultImageCallback(const rc_msgs::resultsConstPtr& msg);
 	void beatCallback(const std_msgs::Bool::ConstPtr& msg);
 	void nnBeatCallback(const std_msgs::Bool::ConstPtr& msg);
-	void endCallback(const std_msgs::Bool::ConstPtr& msg);
+	//void endCallback(const std_msgs::Bool::ConstPtr& msg);
     void deskCallback(const rc_msgs::calibrateResult::ConstPtr& msg);
     void callback(const rc_msgs::stepConfig &config);
     /*********************

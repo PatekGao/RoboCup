@@ -86,7 +86,6 @@ int main (int argc, char **argv) {
     dynamic_reconfigure::Server<rc_msgs::stepConfig>::CallbackType f;
     server = &_server;
     f = boost::bind(&callback, _1, _2);
-    ROS_INFO("111111111111111111");
     _server.setCallback(f);
 
     //ROS_INFO("Spinning node");
@@ -141,8 +140,8 @@ void endProcess() {
     step++;
     config.step=step;
     server->updateConfig(config);
-    msg.data = true;
-    endPub.publish(msg);
+    //msg.data = true;
+    //endPub.publish(msg);
 
     mtx.lock();
     delete process;
@@ -175,8 +174,8 @@ void timeoutControl(const std::string& _mode, int _step) {
             step++;
             config.step=step;
             server->updateConfig(config);
-            msg.data = false;
-            endPub.publish(msg);
+            //msg.data = false;
+            //endPub.publish(msg);
 
             ros::Duration(20).sleep();
             mtx.lock();
@@ -186,8 +185,8 @@ void timeoutControl(const std::string& _mode, int _step) {
             step++;
             config.step=step;
             server->updateConfig(config);
-            msg.data = false;
-            endPub.publish(msg);
+            //msg.data = false;
+            //endPub.publish(msg);
             ros::Duration(35).sleep();
 
             endProcess();

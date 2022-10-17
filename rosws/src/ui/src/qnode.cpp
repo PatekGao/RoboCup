@@ -41,7 +41,22 @@ namespace ui {
 
         step=config.step;
         mode=config.mode;
+         if (step == 8) {
+                Q_EMIT complete();        // 释放UI中锁定资源
+                log(Info, std::string("ifend  true: ") + std::to_string(step));
 
+                std_msgs::Bool identify;
+                identify.data = false;
+                indentifyControler.publish(identify);
+                // 之后在这里加上识别完成后显示结果的东西
+
+         }else if (step == 2 || step == 5 ) {
+                rotate.updateBegin();
+                log(Info, std::string("ifend  step: ") + std::to_string(step));
+                std_msgs::Bool identify;
+                identify.data = false;
+                indentifyControler.publish(identify);
+        }
     }
 // 初始化ros服务
     bool QNode::init() {
@@ -66,7 +81,7 @@ namespace ui {
         ros::Subscriber rawImageSub = n.subscribe("/raw_img", 1, &ui::QNode::rawImageCallback, this);
         ros::Subscriber beatSub = n.subscribe("/main_beat", 1, &ui::QNode::beatCallback, this);
         ros::Subscriber nnBeatSub = n.subscribe("/nn_beat", 1, &ui::QNode::nnBeatCallback, this);
-        ros::Subscriber endSub = n.subscribe("/ifend", 1, &ui::QNode::endCallback, this);
+        //ros::Subscriber endSub = n.subscribe("/ifend", 1, &ui::QNode::endCallback, this);
         ros::Subscriber deskSub = n.subscribe("/calibrateResult", 1, &ui::QNode::deskCallback, this);
         //stepPublisher = n.advertise<rc_msgs::step>("/step", 10);
         indentifyControler = n.advertise<std_msgs::Bool>("/isIdentify", 1);
@@ -278,7 +293,7 @@ namespace ui {
     void QNode::beatCallback(const std_msgs::Bool::ConstPtr &msg) {
         status[2] = true;
     }
-
+/*
 // main识别结束回调
     void QNode::endCallback(const std_msgs::Bool::ConstPtr &msg) {
         //log(Info,std::string("recive ifend"));
@@ -306,7 +321,7 @@ namespace ui {
             }
         }
     }
-
+*/
     void QNode::deskCallback(const rc_msgs::calibrateResult::ConstPtr& msg) {
         imageMtx.lock();
         lastDesk.clear();
