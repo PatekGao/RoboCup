@@ -45,7 +45,7 @@ void cloudCallback(const sensor_msgs::PointCloud2::ConstPtr &msg);
 
 void identifyCallback(const std_msgs::Bool::ConstPtr &msg);
 
-void callback(rc_msgs::stepConfig &config);
+void callback(const rc_msgs::stepConfig &config);
 
 ros::Publisher res_pub;
 bool isIdentify = false;
@@ -65,7 +65,7 @@ void identifyCallback(const std_msgs::Bool::ConstPtr &msg) {
     step = msg->data;
     mode = msg->mode;
 }*/
-void callback(rc_msgs::stepConfig &config) {
+void callback(const rc_msgs::stepConfig &config) {
     step=config.step;
     mode=config.mode;
 
@@ -3799,7 +3799,9 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "plane_extract"); // 节点名称
     ros::NodeHandle n;
     rc_msgs::stepConfig config;
-    dynamic_reconfigure::Client<rc_msgs::stepConfig> client("/config",boost::bind(&callback, config));
+    dynamic_reconfigure::Client<rc_msgs::stepConfig> client("/scheduler");
+
+    client.setConfigurationCallback(&callback);
     //ros::Subscriber step_sub = n.subscribe("/step", 10, stepCallback);
     ros::Subscriber img_sub = n.subscribe("/cloud", 10, cloudCallback);
     ros::Subscriber Identify_sub = n.subscribe("/isIdentify", 10, identifyCallback);

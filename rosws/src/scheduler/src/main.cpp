@@ -64,9 +64,9 @@ void callback(rc_msgs::stepConfig &config, uint32_t level) {
     modeMtx.lock();
     mode =  config.mode;                        //给全局变量mode给予读到的mode类型，下次就不进前面的判断了
     modeMtx.unlock();
-    if (config.step == 1 || config.step == 4 || config.step == 7 ||  config.step == 8) {
-        step =  config.step;
-    }
+ //   if (config.step == 1 || config.step == 4 || config.step == 7 ||  config.step == 8) {
+    step =  config.step;
+//    }
     ROS_INFO("Now:  step: %d    ,mode: %s",config.step,config.mode.c_str());
 }
 
@@ -86,6 +86,7 @@ int main (int argc, char **argv) {
     dynamic_reconfigure::Server<rc_msgs::stepConfig>::CallbackType f;
     server = &_server;
     f = boost::bind(&callback, _1, _2);
+
     _server.setCallback(f);
 
     //ROS_INFO("Spinning node");

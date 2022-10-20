@@ -24,7 +24,7 @@ namespace ui {
     QNode::QNode(int argc, char **argv) :
             init_argc(argc),
             init_argv(argv),
-            client("/config", boost::bind(&QNode::callback, this, _1))
+            client("/scheduler", boost::bind(&QNode::callback, this, _1))
             {
         qRegisterMetaType<bool>("bool");
     }

@@ -17,6 +17,8 @@
 #include "yolo/utils.h"
 #include "yolo/calibrator.h"
 #include "yolo/preprocess.h"
+#include "rc_msgs/stepConfig.h"
+#include <dynamic_reconfigure/client.h>
 
 #define USE_FP16  // set USE_INT8 or USE_FP16 or USE_FP32
 #define DEVICE 0  // GPU id
@@ -374,14 +376,18 @@ void imageCallback(const rc_msgs::raw_img::ConstPtr &msg) {
     resPub.publish(Result);
 }
 
+void callback(const rc_msgs::stepConfig &config) {
+    step=config.step;
+}
+
 void identifyCallback(const std_msgs::Bool::ConstPtr &msg) {
     isIdentify = msg->data;
 }
-
+/*
 void stepCallback(const rc_msgs::step::ConstPtr &msg) {
     step = msg->data;
 }
-
+*/
 void beatSend() {
     std::chrono::milliseconds duration( 500 );
     while(beatRun) {
@@ -447,8 +453,13 @@ int main(int argc, char** argv) {
     ros::Subscriber isIdentifySub = n.subscribe("/isIdentify", 1, &identifyCallback);
     resPub = n.advertise<rc_msgs::results>("/rcnn_results", 20);
     beatPub = n.advertise<std_msgs::Bool>("/nn_beat", 5);
-    ros::Subscriber stepSub = n.subscribe("/step", 1, &stepCallback);
+    //ros::Subscriber stepSub = n.subscribe("/step", 1, &stepCallback);
+    dynamic_reconfigure::Client<rc_msgs::stepConfig> client("/scheduler");
+
+    client.setConfigurationCallback(&callback);
+
     std::thread beatThread = std::thread(&beatSend);
+
     ros::Rate loop_rate(10);
     while (ros::ok()) {
         ros::spinOnce();
