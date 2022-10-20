@@ -8,7 +8,6 @@
 #include "rc_msgs/stepConfig.h"
 
 
-
 namespace ui {
 
     int step = 0;        // 存储当前step
@@ -18,14 +17,11 @@ namespace ui {
     std::string mode{"mode"};
 
 
-
-
 // qt多线程初始化
     QNode::QNode(int argc, char **argv) :
             init_argc(argc),
             init_argv(argv),
-            client("/scheduler", boost::bind(&QNode::callback, this, _1))
-            {
+            client("/scheduler", boost::bind(&QNode::callback, this, _1)) {
         qRegisterMetaType<bool>("bool");
     }
 
@@ -37,27 +33,27 @@ namespace ui {
         }
         wait();
     }
+
     void QNode::callback(const rc_msgs::stepConfig &config) {
+        step = config.step;
+        mode = config.mode;
+        if (step == 8) {
+            Q_EMIT complete();        // 释放UI中锁定资源
+            log(Info, std::string("ifend  true: ") + std::to_string(step));
 
-        step=config.step;
-        mode=config.mode;
-         if (step == 8) {
-                Q_EMIT complete();        // 释放UI中锁定资源
-                log(Info, std::string("ifend  true: ") + std::to_string(step));
-
-                std_msgs::Bool identify;
-                identify.data = false;
-                indentifyControler.publish(identify);
-                // 之后在这里加上识别完成后显示结果的东西
-
-         }else if (step == 2 || step == 5 ) {
-                rotate.updateBegin();
-                log(Info, std::string("ifend  step: ") + std::to_string(step));
-                std_msgs::Bool identify;
-                identify.data = false;
-                indentifyControler.publish(identify);
+            std_msgs::Bool identify;
+            identify.data = false;
+            indentifyControler.publish(identify);
+            // 之后在这里加上识别完成后显示结果的东西
+        } else if (step == 2 || step == 5) {
+            rotate.updateBegin();
+            log(Info, std::string("ifend  step: ") + std::to_string(step));
+            std_msgs::Bool identify;
+            identify.data = false;
+            indentifyControler.publish(identify);
         }
     }
+
 // 初始化ros服务
     bool QNode::init() {
         rotateImg = cv::imread(std::string(RESOURCE_PATH) + "rotate.png");
@@ -81,9 +77,7 @@ namespace ui {
         ros::Subscriber rawImageSub = n.subscribe("/raw_img", 1, &ui::QNode::rawImageCallback, this);
         ros::Subscriber beatSub = n.subscribe("/main_beat", 1, &ui::QNode::beatCallback, this);
         ros::Subscriber nnBeatSub = n.subscribe("/nn_beat", 1, &ui::QNode::nnBeatCallback, this);
-        //ros::Subscriber endSub = n.subscribe("/ifend", 1, &ui::QNode::endCallback, this);
         ros::Subscriber deskSub = n.subscribe("/calibrateResult", 1, &ui::QNode::deskCallback, this);
-        //stepPublisher = n.advertise<rc_msgs::step>("/step", 10);
         indentifyControler = n.advertise<std_msgs::Bool>("/isIdentify", 1);
 
 
@@ -103,7 +97,8 @@ namespace ui {
                 stt = step;
                 rotate.ss = step;
 
-                log(Info, std::string("Now step: ") + std::to_string(config.step));
+                log(Info, std::string("Now step: ") +
+                          std::to_string(config.step));
                 std::string ll;
                 switch (step) {
                     case -1:
@@ -176,10 +171,10 @@ namespace ui {
         identify.data = true;
         indentifyControler.publish(identify);
 
-        config.step=step;
-        config.mode=mode;
+        config.step = step;
+        config.mode = mode;
         client.setConfiguration(config);
-        ROS_INFO("Now:  step: %d    ,mode: %s",config.step,config.mode.c_str());
+        ROS_INFO("Now:  step: %d    ,mode: %s", config.step, config.mode.c_str());
     }
 
 // 日志记录函数
@@ -260,12 +255,12 @@ namespace ui {
             if (t == 2) {
                 step++;
                 log(Warn, std::string("Rotating time out!!!"));
-                config.step=step;
+                config.step = step;
                 client.setConfiguration(config);
             } else if (t == 3) {
                 step++;
                 log(Warn, std::string("Waiting for rotating time out!!!"));
-                config.step=step;
+                config.step = step;
                 client.setConfiguration(config);
             } else if (t == 1) {
                 if (step == 3 || step == 6) {
@@ -274,7 +269,7 @@ namespace ui {
                     indentifyControler.publish(identify);
                 }
                 step++;
-                config.step=step;
+                config.step = step;
                 client.setConfiguration(config);
             }
             //log(Info,std::string("Now MSE: ")+std::to_string(rotate.lastMSE));
@@ -293,6 +288,7 @@ namespace ui {
     void QNode::beatCallback(const std_msgs::Bool::ConstPtr &msg) {
         status[2] = true;
     }
+
 /*
 // main识别结束回调
     void QNode::endCallback(const std_msgs::Bool::ConstPtr &msg) {
@@ -322,7 +318,7 @@ namespace ui {
         }
     }
 */
-    void QNode::deskCallback(const rc_msgs::calibrateResult::ConstPtr& msg) {
+    void QNode::deskCallback(const rc_msgs::calibrateResult::ConstPtr &msg) {
         imageMtx.lock();
         lastDesk.clear();
         lastDesk.emplace_back(msg->data[1].x, msg->data[1].y);
@@ -333,4 +329,4 @@ namespace ui {
         cv::polylines(colorImg, lastDesk, 1, cv::Scalar(0xff, 0xcc, 0x66));
         imageMtx.unlock();
     }
-}  // 命名空间 ui 结束
+}  // namespace ui

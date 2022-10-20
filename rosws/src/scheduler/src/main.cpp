@@ -1,7 +1,7 @@
 //
 // Created by bismarck on 2022/3/24.
 //
-
+#include "rc_msgs/stepConfig.h"
 #include "scheduler/measure.h"
 #include "scheduler/identify.h"
 #include "scheduler/tcpClient.h"
@@ -15,7 +15,6 @@
 #include <atomic>
 #include <mutex>
 #include <fstream>
-#include "rc_msgs/stepConfig.h"
 #include <dynamic_reconfigure/server.h>
 //#include <dynamic_reconfigure/client.h>
 
@@ -62,12 +61,12 @@ void callback(rc_msgs::stepConfig &config, uint32_t level) {
         modeMtx.unlock();
     }
     modeMtx.lock();
-    mode =  config.mode;                        //给全局变量mode给予读到的mode类型，下次就不进前面的判断了
+    mode =  config.mode;
+    //给全局变量mode给予读到的mode类型，下次就不进前面的判断了
     modeMtx.unlock();
- //   if (config.step == 1 || config.step == 4 || config.step == 7 ||  config.step == 8) {
     step =  config.step;
-//    }
-    ROS_INFO("Now:  step: %d    ,mode: %s",config.step,config.mode.c_str());
+    ROS_INFO("Now:  step: %d    ,mode: %s",
+             config.step,config.mode.c_str());
 }
 
 

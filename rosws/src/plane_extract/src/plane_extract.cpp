@@ -1,5 +1,6 @@
 #include<ros/ros.h>
 #include"rc_msgs/raw_img.h"
+#include "rc_msgs/stepConfig.h"
 #include "rc_msgs/point.h"
 #include "rc_msgs/step.h"
 #include"rc_msgs/calibrateResult.h"
@@ -27,7 +28,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
-#include "rc_msgs/stepConfig.h"
+
 #include <dynamic_reconfigure/server.h>
 #include <dynamic_reconfigure/client.h>
 #include <iostream>

@@ -32,9 +32,9 @@
 #include "rc_msgs/results.h"
 #include "rc_msgs/step.h"
 #include "rc_msgs/calibrateResult.h"
+#include "rc_msgs/stepConfig.h"
 #include "std_msgs/Bool.h"
 #include <mutex>
-#include "rc_msgs/stepConfig.h"
 #include <dynamic_reconfigure/server.h>
 #include <dynamic_reconfigure/client.h>
 /*****************************************************************************
