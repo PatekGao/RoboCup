@@ -111,12 +111,7 @@ void get_img(ros::NodeHandle nh) {
     if (list.size() == 0)
         throw std::runtime_error("No device detected. Is it plugged in?");
     rs2::device dev = list.front();
-//    dev.hardware_reset();
-//    ros::Duration(4).sleep();
-//    list = ctx.query_devices(); // Get a snapshot of currently connected devices
-//    if (list.size() == 0)
-//        throw std::runtime_error("No device detected. Is it plugged in?");
-//    dev = list.front();
+
     auto sensors = dev.query_sensors();
     for (const auto &sensor: sensors) {
         setToDefault(sensor);
@@ -153,16 +148,9 @@ void get_img(ros::NodeHandle nh) {
         points = pc.calculate(depth_frame);
         auto prof = depth_frame.get_profile().as<rs2::video_stream_profile>();
         auto i = prof.get_intrinsics();
-        //cout<<"width:"<<i.width<<"height:"<<i.height<<"ppx:"<<i.ppx<<"ppy:"<<i.ppy<<"fx:"<<i.fx<<"fy:"<<i.fy<<"dis model:"<<i.model<<endl;
-        //cout<<"coeffi:"<<i.coeffs[0]<<" "<<i.coeffs[1]<<" "<<i.coeffs[2]<<" "<<i.coeffs[3]<<" "<<i.coeffs[4]<<endl;
 
 
         auto pcl_points = points_to_pcl(points);
-//        pcl::visualization::CloudViewer viewer ("Simple Cloud Viewer");
-//        viewer.showCloud (pcl_points);
-//        while (!viewer.wasStopped ())
-//        {
-//        }
 
         //create cv::Mat from rs2::frame
         Mat depth_;
@@ -196,10 +184,6 @@ void get_img(ros::NodeHandle nh) {
         }
         dst3.convertTo(depth_, CV_8UC1, 1);
 
-        //  imshow("Display Image", color);
-        // waitKey(1);
-        // imshow("Display deep", depth_);
-        // waitKey(1);
 
         toROSMsg(*pcl_points, cloudmsg);
         sensor_msgs::ImagePtr color_msg =
@@ -208,18 +192,15 @@ void get_img(ros::NodeHandle nh) {
         sensor_msgs::ImagePtr depth_msg =
                 cv_bridge::CvImage(std_msgs::Header(), "mono8", depth_).toImageMsg();
         depth_msg->header.stamp = ros::Time::now();
+
         img_msg.color = *color_msg;
-        //img_msg.depth = *depth_msg;
         img_msg_depth.depth = *depth_msg;
 
         img_depth_pub.publish(img_msg_depth);
         img_pub.publish(img_msg);
 
         cloud_pub.publish(cloudmsg);
-        //cout<<"pub img!"<<endl;
-        // cout<<"width:"<<i.width<<"height:"<<i.height
-        // <<"ppx:"<<i.ppx<<"ppy:"<<i.ppy<<"fx:"
-        // <<i.fx<<"fy:"<<i.fy<<"dis model:"<<i.model<<endl;
+
     }
     change_sensor_option(sensors[0], 0);
 }
@@ -231,7 +212,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/cloud", 10);
     img_pub = nh.advertise<rc_msgs::raw_img>("/raw_img", 10);
-    //img_depth_pub = nh.advertise<rc_msgs::raw_img_depth>("/raw_img_depth", 10);
+    img_depth_pub = nh.advertise<rc_msgs::raw_img_depth>("/raw_img_depth", 10);
     ros::Duration(1).sleep();
     while (ros::ok())
         get_img(nh);
