@@ -233,9 +233,9 @@ namespace ui {
         }
     }
 
-    void QNode::rawImageDepthCallback(const rc_msgs::raw_img_depthConstPtr &msg) {
+    void QNode::rawImageDepthCallback(const sensor_msgs::ImageConstPtr& msg) {
         try {
-            depthImg = cv_bridge::toCvShare(msg->depth, msg, "mono8")->image.clone();
+            depthImg = cv_bridge::toCvShare(msg, "mono8")->image.clone();
         }
         catch (cv_bridge::Exception &e) {
             ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -244,14 +244,14 @@ namespace ui {
     }
 
 // 获取原始图像回调
-    void QNode::rawImageCallback(const rc_msgs::raw_imgConstPtr &msg) {
+    void QNode::rawImageCallback(const sensor_msgs::ImageConstPtr& msg) {
         status[0] = true;
         //ROS_WARN("receving img");
         //cv::Mat color, depth;
         try {
             //对colorImg进行修改即可修改ui显示结果
             if (step == 0 || step == 8) {
-                colorImg = cv_bridge::toCvShare(msg->color, msg, "bgr8")->image.clone();
+                colorImg = cv_bridge::toCvShare(msg, "bgr8")->image.clone();
             } else if (step == 2 || step == 5 || step == 3 || step == 6) {
                 colorImg = rotateImg;
             }
@@ -300,35 +300,6 @@ namespace ui {
         status[2] = true;
     }
 
-/*
-// main识别结束回调
-    void QNode::endCallback(const std_msgs::Bool::ConstPtr &msg) {
-        //log(Info,std::string("recive ifend"));
-        if (msg->data) {
-            if (step == 8) {
-                Q_EMIT complete();        // 释放UI中锁定资源
-                log(Info, std::string("ifend  true: ") + std::to_string(step));
-
-                std_msgs::Bool identify;
-                identify.data = false;
-                indentifyControler.publish(identify);
-                // 之后在这里加上识别完成后显示结果的东西
-
-            }
-        } else {
-            if (step == 2 || step == 5 || step == 8) {
-                rotate.updateBegin();
-                log(Info, std::string("ifend  step: ") + std::to_string(step));
-                if (step == 8) {
-                    Q_EMIT complete();
-                }
-                std_msgs::Bool identify;
-                identify.data = false;
-                indentifyControler.publish(identify);
-            }
-        }
-    }
-*/
     void QNode::deskCallback(const rc_msgs::calibrateResult::ConstPtr &msg) {
         imageMtx.lock();
         lastDesk.clear();

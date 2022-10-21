@@ -19,19 +19,20 @@
 // To workaround boost/qt4 problems that won't be bugfixed. Refer to
 //    https://bugreports.qt.io/browse/QTBUG-22829
 #ifndef Q_MOC_RUN
+
 #include <ros/ros.h>
+
 #endif
+
 #include <string>
 #include <QThread>
 #include <QStringListModel>
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/Image.h>
 #include <image_transport/image_transport.h>
 #include "ui/rotation_recongnition.hpp"
-#include "rc_msgs/raw_img.h"
-#include "rc_msgs/raw_img_depth.h"
 #include "rc_msgs/results.h"
-#include "rc_msgs/step.h"
 #include "rc_msgs/calibrateResult.h"
 #include "rc_msgs/stepConfig.h"
 #include "std_msgs/Bool.h"
@@ -48,56 +49,74 @@ namespace ui {
 ** Class
 *****************************************************************************/
 
-class QNode : public QThread {
+    class QNode : public QThread {
     Q_OBJECT
-public:
-	cv::Mat colorImg, depthImg;
-	turn2 rotate;		// 修改此处切换旋转判定方案，turn为连续判定，turn2为MSE和判定
-    std::mutex imageMtx;
-    dynamic_reconfigure::Client<rc_msgs::stepConfig> client;
-    rc_msgs::stepConfig config;
-	QNode(int argc, char** argv );
-	virtual ~QNode();
-    bool init();
-	void run();
-	void rawImageCallback(const rc_msgs::raw_imgConstPtr& msg);
-    void rawImageDepthCallback(const rc_msgs::raw_img_depthConstPtr& msg);
-    void resultImageCallback(const rc_msgs::resultsConstPtr& msg);
-	void beatCallback(const std_msgs::Bool::ConstPtr& msg);
-	void nnBeatCallback(const std_msgs::Bool::ConstPtr& msg);
-    void deskCallback(const rc_msgs::calibrateResult::ConstPtr& msg);
-    void callback(const rc_msgs::stepConfig &config);
-    /*********************
-	** Logging
-	**********************/
-	enum LogLevel {
-		Debug,
-		Info,
-		Warn,
-		Error,
-		Fatal
-	 };
+    public:
+        cv::Mat colorImg, depthImg;
+        turn2 rotate;        // 修改此处切换旋转判定方案，turn为连续判定，turn2为MSE和判定
+        std::mutex imageMtx;
+        dynamic_reconfigure::Client<rc_msgs::stepConfig> client;
+        rc_msgs::stepConfig config;
 
-	QStringListModel* loggingModel() { return &logging_model; }
-	void log( const LogLevel &level, const std::string &msg);
-	void startIdentify(bool isRoundOne, std::string _mode);
+        QNode(int argc, char **argv);
 
-Q_SIGNALS:
-	void loggingUpdated();
-    void rosShutdown();
-	void complete();
-	void updateStatus(int, bool*);
+        virtual ~QNode();
 
-private:
-	int init_argc;
-	char** init_argv;
+        bool init();
 
-	//ros::Publisher stepPublisher;
-    ros::Publisher indentifyControler;
-    QStringListModel logging_model;
-    std::vector<cv::Point> lastDesk;
-    cv::Mat rotateImg, rawImage;
-};
+        void run();
+
+        void rawImageCallback(const sensor_msgs::ImageConstPtr &msg);
+
+        void rawImageDepthCallback(const sensor_msgs::ImageConstPtr &msg);
+
+        void resultImageCallback(const rc_msgs::resultsConstPtr &msg);
+
+        void beatCallback(const std_msgs::Bool::ConstPtr &msg);
+
+        void nnBeatCallback(const std_msgs::Bool::ConstPtr &msg);
+
+        void deskCallback(const rc_msgs::calibrateResult::ConstPtr &msg);
+
+        void callback(const rc_msgs::stepConfig &config);
+
+        /*********************
+        ** Logging
+        **********************/
+        enum LogLevel {
+            Debug,
+            Info,
+            Warn,
+            Error,
+            Fatal
+        };
+
+        QStringListModel *loggingModel() { return &logging_model; }
+
+        void log(const LogLevel &level, const std::string &msg);
+
+        void startIdentify(bool isRoundOne, std::string _mode);
+
+    Q_SIGNALS:
+
+        void loggingUpdated();
+
+        void rosShutdown();
+
+        void complete();
+
+        void updateStatus(int, bool *);
+
+    private:
+        int init_argc;
+        char **init_argv;
+
+        //ros::Publisher stepPublisher;
+        ros::Publisher indentifyControler;
+        QStringListModel logging_model;
+        std::vector<cv::Point> lastDesk;
+        cv::Mat rotateImg, rawImage;
+    };
 
 }  // namespace ui
 

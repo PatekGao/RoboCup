@@ -1,6 +1,4 @@
 #include "ros/ros.h"
-#include"rc_msgs/raw_img.h"
-#include"rc_msgs/raw_img_depth.h"
 #include"rc_msgs/calibrateResult.h"
 #include<cv_bridge/cv_bridge.h>
 #include<sensor_msgs/Image.h>
@@ -42,8 +40,8 @@ const double camera_fy = 474.055;
 ros::Publisher img_pub;
 ros::Publisher cloud_pub;
 ros::Publisher img_depth_pub;
-rc_msgs::raw_img img_msg;
-rc_msgs::raw_img_depth img_msg_depth;
+sensor_msgs::Image img_msg;
+sensor_msgs::Image img_msg_depth;
 sensor_msgs::PointCloud2 cloudmsg;
 Mat depth;
 
@@ -152,6 +150,7 @@ void get_img(ros::NodeHandle nh) {
 
         auto pcl_points = points_to_pcl(points);
 
+
         //create cv::Mat from rs2::frame
         Mat depth_;
         Mat color(Size(640, 480), CV_8UC3);
@@ -193,8 +192,8 @@ void get_img(ros::NodeHandle nh) {
                 cv_bridge::CvImage(std_msgs::Header(), "mono8", depth_).toImageMsg();
         depth_msg->header.stamp = ros::Time::now();
 
-        img_msg.color = *color_msg;
-        img_msg_depth.depth = *depth_msg;
+        img_msg = *color_msg;
+        img_msg_depth = *depth_msg;
 
         img_depth_pub.publish(img_msg_depth);
         img_pub.publish(img_msg);
@@ -211,8 +210,8 @@ int main(int argc, char **argv) {
     //声明节点句柄
     ros::NodeHandle nh;
     cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/cloud", 10);
-    img_pub = nh.advertise<rc_msgs::raw_img>("/raw_img", 10);
-    img_depth_pub = nh.advertise<rc_msgs::raw_img_depth>("/raw_img_depth", 10);
+    img_pub = nh.advertise<sensor_msgs::Image>("/raw_img", 10);
+    img_depth_pub = nh.advertise<sensor_msgs::Image>("/raw_img_depth", 10);
     ros::Duration(1).sleep();
     while (ros::ok())
         get_img(nh);

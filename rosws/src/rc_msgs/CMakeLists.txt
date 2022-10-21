@@ -14,12 +14,10 @@ find_package(
 
 add_message_files(
         FILES
-        raw_img.msg
         point.msg
         detection.msg
         results.msg
         calibrateResult.msg
-        raw_img_depth.msg
 )
 generate_dynamic_reconfigure_options(
         cfg/stepConfig.cfg
