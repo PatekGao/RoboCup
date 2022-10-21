@@ -20,6 +20,7 @@ add_message_files(
         results.msg
         step.msg
         calibrateResult.msg
+        raw_img_depth.msg
 )
 generate_dynamic_reconfigure_options(
         cfg/stepConfig.cfg

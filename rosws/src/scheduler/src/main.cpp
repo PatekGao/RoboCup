@@ -16,7 +16,6 @@
 #include <mutex>
 #include <fstream>
 #include <dynamic_reconfigure/server.h>
-//#include <dynamic_reconfigure/client.h>
 
 //#define JUDGE_SYSTEM
 std::string mode = "None";
@@ -74,7 +73,7 @@ int main (int argc, char **argv) {
     ros::init(argc, argv, "scheduler");
     ros::NodeHandle nh;
 
-    endPub = nh.advertise<std_msgs::Bool>("/ifend", 1);
+    //endPub = nh.advertise<std_msgs::Bool>("/ifend", 1);
     beatPub = nh.advertise<std_msgs::Bool>("/main_beat", 1);
 
     //ros::Subscriber stepSub = nh.subscribe("/step", 1, stepCallback);
@@ -85,22 +84,17 @@ int main (int argc, char **argv) {
     dynamic_reconfigure::Server<rc_msgs::stepConfig>::CallbackType f;
     server = &_server;
     f = boost::bind(&callback, _1, _2);
-
     _server.setCallback(f);
 
     //ROS_INFO("Spinning node");
     //ros::spin();
     std::thread beatThread(beatSend);
-
     ros::MultiThreadedSpinner spinner(2);
     spinner.spin();
-
     is_running = false;
     beatThread.join();
     controller.join();
     delete process;
-
-
     return 0;
 }
 
@@ -136,18 +130,14 @@ void endProcess() {
     std::string res = process->getResult();      //将process中输出的结果导出
     mtx.unlock();
     saveResult(res);
-
-    step++;
-    config.step=step;
+    step=8;
+    config.step=8;
     server->updateConfig(config);
-    //msg.data = true;
-    //endPub.publish(msg);
 
     mtx.lock();
     delete process;
     process = nullptr;
     mtx.unlock();
-
     step = 0;
     isCalibrate = false;
 
@@ -174,8 +164,6 @@ void timeoutControl(const std::string& _mode, int _step) {
             step++;
             config.step=step;
             server->updateConfig(config);
-            //msg.data = false;
-            //endPub.publish(msg);
 
             ros::Duration(20).sleep();
             mtx.lock();
@@ -185,8 +173,6 @@ void timeoutControl(const std::string& _mode, int _step) {
             step++;
             config.step=step;
             server->updateConfig(config);
-            //msg.data = false;
-            //endPub.publish(msg);
             ros::Duration(35).sleep();
 
             endProcess();
@@ -220,28 +206,7 @@ void beatSend() {
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
-/*
-void stepCallback(const rc_msgs::step::ConstPtr &msg) {
-    modeMtx.lock();
-    if (mode == "None") {
-        modeMtx.unlock();
-        if (msg->mode == "identify") {
-            process = new Identify();            //将整体的类切换至 识别or测量
-        } else {
-            process = new Measure();
-        }
-        controller = std::thread(timeoutControl, msg->mode, msg->data);
-    } else {
-        modeMtx.unlock();
-    }
-    modeMtx.lock();
-    mode = msg->mode;                        //给全局变量mode给予读到的mode类型，下次就不进前面的判断了
-    modeMtx.unlock();
-    if (msg->data == 1 || msg->data == 4 || msg->data == 7 || msg->data == 8) {
-        step = msg->data;
-    }
-}
-*/
+
 void isIdentifyCallback(const std_msgs::Bool::ConstPtr &msg) {
     if (msg->data != isCalibrate) {
         if (msg->data) {

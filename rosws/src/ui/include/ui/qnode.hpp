@@ -29,6 +29,7 @@
 #include <image_transport/image_transport.h>
 #include "ui/rotation_recongnition.hpp"
 #include "rc_msgs/raw_img.h"
+#include "rc_msgs/raw_img_depth.h"
 #include "rc_msgs/results.h"
 #include "rc_msgs/step.h"
 #include "rc_msgs/calibrateResult.h"
@@ -60,10 +61,10 @@ public:
     bool init();
 	void run();
 	void rawImageCallback(const rc_msgs::raw_imgConstPtr& msg);
+    void rawImageDepthCallback(const rc_msgs::raw_img_depthConstPtr& msg);
     void resultImageCallback(const rc_msgs::resultsConstPtr& msg);
 	void beatCallback(const std_msgs::Bool::ConstPtr& msg);
 	void nnBeatCallback(const std_msgs::Bool::ConstPtr& msg);
-	//void endCallback(const std_msgs::Bool::ConstPtr& msg);
     void deskCallback(const rc_msgs::calibrateResult::ConstPtr& msg);
     void callback(const rc_msgs::stepConfig &config);
     /*********************

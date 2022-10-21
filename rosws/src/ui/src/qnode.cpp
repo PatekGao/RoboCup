@@ -75,6 +75,7 @@ namespace ui {
         // topic相关
         ros::Subscriber resultImageSub = n.subscribe("/rcnn_results", 1, &ui::QNode::resultImageCallback, this);
         ros::Subscriber rawImageSub = n.subscribe("/raw_img", 1, &ui::QNode::rawImageCallback, this);
+        //ros::Subscriber rawImageDepthSub = n.subscribe("/raw_img_depth", 1, &ui::QNode::rawImageDepthCallback, this);
         ros::Subscriber beatSub = n.subscribe("/main_beat", 1, &ui::QNode::beatCallback, this);
         ros::Subscriber nnBeatSub = n.subscribe("/nn_beat", 1, &ui::QNode::nnBeatCallback, this);
         ros::Subscriber deskSub = n.subscribe("/calibrateResult", 1, &ui::QNode::deskCallback, this);
@@ -231,7 +232,17 @@ namespace ui {
             imageMtx.unlock();
         }
     }
-
+/*
+    void QNode::rawImageDepthCallback(const rc_msgs::raw_img_depthConstPtr &msg) {
+        try {
+            depthImg = cv_bridge::toCvShare(msg->depth, msg, "mono8")->image.clone();
+        }
+        catch (cv_bridge::Exception &e) {
+            ROS_ERROR("cv_bridge exception: %s", e.what());
+            return;
+        }
+    }
+*/
 // 获取原始图像回调
     void QNode::rawImageCallback(const rc_msgs::raw_imgConstPtr &msg) {
         status[0] = true;
@@ -244,7 +255,7 @@ namespace ui {
             } else if (step == 2 || step == 5 || step == 3 || step == 6) {
                 colorImg = rotateImg;
             }
-            depthImg = cv_bridge::toCvShare(msg->depth, msg, "mono8")->image.clone();
+            //depthImg = cv_bridge::toCvShare(msg->depth, msg, "mono8")->image.clone();
         }
         catch (cv_bridge::Exception &e) {
             ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -252,17 +263,17 @@ namespace ui {
         }
         if (step == 2 || step == 3 || step == 5 || step == 6) {
             int t = rotate.getStep(colorImg, depthImg, step);
-            if (t == 2) {
+            if (t == 2 && (step == 3 || step == 6)) {
                 step++;
                 log(Warn, std::string("Rotating time out!!!"));
                 config.step = step;
                 client.setConfiguration(config);
-            } else if (t == 3) {
+            } else if (t == 3 && (step == 2 || step == 5)) {
                 step++;
                 log(Warn, std::string("Waiting for rotating time out!!!"));
                 config.step = step;
                 client.setConfiguration(config);
-            } else if (t == 1) {
+            } else if (t == 1 && (step == 2 || step == 3 || step == 5 || step == 6)) {
                 if (step == 3 || step == 6) {
                     std_msgs::Bool identify;
                     identify.data = true;

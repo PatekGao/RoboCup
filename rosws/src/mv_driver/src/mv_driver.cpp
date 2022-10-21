@@ -1,5 +1,6 @@
 #include "ros/ros.h"
 #include"rc_msgs/raw_img.h"
+#include"rc_msgs/raw_img_depth.h"
 #include"rc_msgs/calibrateResult.h"
 #include<cv_bridge/cv_bridge.h>
 #include<sensor_msgs/Image.h>
@@ -40,7 +41,9 @@ const double camera_fy = 474.055;
 //
 ros::Publisher img_pub;
 ros::Publisher cloud_pub;
+//ros::Publisher img_depth_pub;
 rc_msgs::raw_img img_msg;
+//rc_msgs::raw_img_depth img_msg_depth;
 sensor_msgs::PointCloud2 cloudmsg;
 Mat depth;
 
@@ -48,13 +51,14 @@ Mat depth;
 
 
 
-static void change_sensor_option(const rs2::sensor &sensor, float value = 24, rs2_option option_type = rs2_option(15)) {
+static void change_sensor_option(const rs2::sensor &sensor) {
+    rs2_option option_type = rs2_option(15);
     if (!sensor.supports(option_type)) {
         std::cerr << "This option is not supported by this sensor" << std::endl;
         return;
     }
     try {
-        sensor.set_option(option_type, value);
+        sensor.set_option(option_type, 24);
     }
     catch (const rs2::error &e) {
         std::cerr << "Failed to set option " << option_type << ". (" << e.what() << ")" << std::endl;
@@ -96,12 +100,6 @@ void setToDefault(const rs2::sensor &sensor) {
         }
     }
     if (sensor.supports(RS2_OPTION_EXPOSURE)) {
-        /*try {
-            sensor.set_option(RS2_OPTION_CONFIDENCE_THRESHOLD, 0.0);
-        }
-        catch(const rs2::error& e) {
-            std::cerr << "Failed to set option " << ". (" << e.what() << ")" << std::endl;
-        }*/
         cout << "support" << endl;
     } else {
         cout << "don't support" << endl;
@@ -213,15 +211,18 @@ void get_img(ros::NodeHandle nh) {
         depth_msg->header.stamp = ros::Time::now();
         img_msg.color = *color_msg;
         img_msg.depth = *depth_msg;
+        //img_msg_depth.depth = *depth_msg;
 
+        //img_depth_pub.publish(img_msg_depth);
         img_pub.publish(img_msg);
+
         cloud_pub.publish(cloudmsg);
         //cout<<"pub img!"<<endl;
         // cout<<"width:"<<i.width<<"height:"<<i.height
         // <<"ppx:"<<i.ppx<<"ppy:"<<i.ppy<<"fx:"
         // <<i.fx<<"fy:"<<i.fy<<"dis model:"<<i.model<<endl;
     }
-    change_sensor_option(sensors[0], 0);
+    change_sensor_option(sensors[0]);
 }
 
 int main(int argc, char **argv) {
@@ -231,6 +232,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/cloud", 10);
     img_pub = nh.advertise<rc_msgs::raw_img>("/raw_img", 10);
+    //img_depth_pub = nh.advertise<rc_msgs::raw_img_depth>("/raw_img_depth", 10);
     ros::Duration(1).sleep();
     while (ros::ok())
         get_img(nh);
