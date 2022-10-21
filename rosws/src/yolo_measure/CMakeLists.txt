@@ -15,7 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   rc_msgs
   roscpp
   std_msgs
-        dynamic_reconfigure
+  dynamic_reconfigure
 )
 find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
