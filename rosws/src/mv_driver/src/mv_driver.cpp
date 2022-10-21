@@ -41,9 +41,9 @@ const double camera_fy = 474.055;
 //
 ros::Publisher img_pub;
 ros::Publisher cloud_pub;
-//ros::Publisher img_depth_pub;
+ros::Publisher img_depth_pub;
 rc_msgs::raw_img img_msg;
-//rc_msgs::raw_img_depth img_msg_depth;
+rc_msgs::raw_img_depth img_msg_depth;
 sensor_msgs::PointCloud2 cloudmsg;
 Mat depth;
 
@@ -210,10 +210,10 @@ void get_img(ros::NodeHandle nh) {
                 cv_bridge::CvImage(std_msgs::Header(), "mono8", depth_).toImageMsg();
         depth_msg->header.stamp = ros::Time::now();
         img_msg.color = *color_msg;
-        img_msg.depth = *depth_msg;
-        //img_msg_depth.depth = *depth_msg;
+        //img_msg.depth = *depth_msg;
+        img_msg_depth.depth = *depth_msg;
 
-        //img_depth_pub.publish(img_msg_depth);
+        img_depth_pub.publish(img_msg_depth);
         img_pub.publish(img_msg);
 
         cloud_pub.publish(cloudmsg);
@@ -232,7 +232,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/cloud", 10);
     img_pub = nh.advertise<rc_msgs::raw_img>("/raw_img", 10);
-    //img_depth_pub = nh.advertise<rc_msgs::raw_img_depth>("/raw_img_depth", 10);
+    img_depth_pub = nh.advertise<rc_msgs::raw_img_depth>("/raw_img_depth", 10);
     ros::Duration(1).sleep();
     while (ros::ok())
         get_img(nh);

@@ -75,7 +75,7 @@ namespace ui {
         // topic相关
         ros::Subscriber resultImageSub = n.subscribe("/rcnn_results", 1, &ui::QNode::resultImageCallback, this);
         ros::Subscriber rawImageSub = n.subscribe("/raw_img", 1, &ui::QNode::rawImageCallback, this);
-        //ros::Subscriber rawImageDepthSub = n.subscribe("/raw_img_depth", 1, &ui::QNode::rawImageDepthCallback, this);
+        ros::Subscriber rawImageDepthSub = n.subscribe("/raw_img_depth", 1, &ui::QNode::rawImageDepthCallback, this);
         ros::Subscriber beatSub = n.subscribe("/main_beat", 1, &ui::QNode::beatCallback, this);
         ros::Subscriber nnBeatSub = n.subscribe("/nn_beat", 1, &ui::QNode::nnBeatCallback, this);
         ros::Subscriber deskSub = n.subscribe("/calibrateResult", 1, &ui::QNode::deskCallback, this);
@@ -232,7 +232,7 @@ namespace ui {
             imageMtx.unlock();
         }
     }
-/*
+
     void QNode::rawImageDepthCallback(const rc_msgs::raw_img_depthConstPtr &msg) {
         try {
             depthImg = cv_bridge::toCvShare(msg->depth, msg, "mono8")->image.clone();
@@ -242,7 +242,7 @@ namespace ui {
             return;
         }
     }
-*/
+
 // 获取原始图像回调
     void QNode::rawImageCallback(const rc_msgs::raw_imgConstPtr &msg) {
         status[0] = true;
