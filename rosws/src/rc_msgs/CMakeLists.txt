@@ -18,7 +18,6 @@ add_message_files(
         point.msg
         detection.msg
         results.msg
-        step.msg
         calibrateResult.msg
         raw_img_depth.msg
 )
