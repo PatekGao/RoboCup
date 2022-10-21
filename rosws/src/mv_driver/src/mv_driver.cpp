@@ -96,11 +96,6 @@ void setToDefault(const rs2::sensor &sensor) {
             }
         }
     }
-    if (sensor.supports(RS2_OPTION_EXPOSURE)) {
-        cout << "support" << endl;
-    } else {
-        cout << "don't support" << endl;
-    }
 }
 
 void get_img(ros::NodeHandle nh) {
