@@ -8,7 +8,6 @@
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 #include <dynamic_reconfigure/server.h>
-#include "rc_msgs/step.h"
 #include "rc_msgs/results.h"
 #include "rc_msgs/calibrateResult.h"
 #include <string>
@@ -35,8 +34,6 @@ tcpClient client("192.168.1.66", 6666);
 #endif
 
 void beatSend();
-
-void stepCallback(const rc_msgs::step::ConstPtr &msg);
 
 void isIdentifyCallback(const std_msgs::Bool::ConstPtr &msg);
 
