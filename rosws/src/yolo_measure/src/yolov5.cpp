@@ -5,11 +5,11 @@
 #include <thread>
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
+#include <dynamic_reconfigure/client.h>
 #include "rc_msgs/detection.h"
 #include "rc_msgs/results.h"
 #include "rc_msgs/point.h"
 #include "rc_msgs/raw_img.h"
-#include "rc_msgs/step.h"
 #include "std_msgs/Bool.h"
 #include "yolo/cuda_utils.h"
 #include "yolo/logging.h"
@@ -17,6 +17,7 @@
 #include "yolo/utils.h"
 #include "yolo/calibrator.h"
 #include "yolo/preprocess.h"
+#include "rc_msgs/stepConfig.h"
 
 #define USE_FP16  // set USE_INT8 or USE_FP16 or USE_FP32
 #define DEVICE 0  // GPU id
@@ -326,7 +327,6 @@ void imageCallback(const rc_msgs::raw_img::ConstPtr &msg) {
     }
     rc_msgs::results Result;
     cv::Mat img = cv_bridge::toCvCopy(msg->color, sensor_msgs::image_encodings::BGR8)->image;
-    Result.depth = msg->color;
     Result.step = step;
 
     float* buffer_idx = (float*)buffers[inputIndex];
@@ -376,9 +376,8 @@ void imageCallback(const rc_msgs::raw_img::ConstPtr &msg) {
 void identifyCallback(const std_msgs::Bool::ConstPtr &msg) {
     isIdentify = msg->data;
 }
-
-void stepCallback(const rc_msgs::step::ConstPtr &msg) {
-    step = msg->data;
+void callback(const rc_msgs::stepConfig &config) {
+    step=config.step;
 }
 
 void beatSend() {
@@ -446,7 +445,9 @@ int main(int argc, char** argv) {
     ros::Subscriber isIdentifySub = n.subscribe("/isIdentify", 1, &identifyCallback);
     resPub = n.advertise<rc_msgs::results>("/rcnn_results", 20);
     beatPub = n.advertise<std_msgs::Bool>("/nn_beat", 5);
-    ros::Subscriber stepSub = n.subscribe("/step", 1, &stepCallback);
+    dynamic_reconfigure::Client<rc_msgs::stepConfig> client("/scheduler");
+
+    client.setConfigurationCallback(&callback);
     std::thread beatThread = std::thread(&beatSend);
     ros::Rate loop_rate(2);
     while (ros::ok()) {

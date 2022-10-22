@@ -1,12 +1,13 @@
 //
 // Created by bismarck on 2022/3/24.
 //
-
+#include "rc_msgs/stepConfig.h"
 #include "scheduler/measure.h"
 #include "scheduler/identify.h"
 #include "scheduler/tcpClient.h"
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
+#include <dynamic_reconfigure/server.h>
 #include "rc_msgs/step.h"
 #include "rc_msgs/results.h"
 #include "rc_msgs/calibrateResult.h"
@@ -16,8 +17,8 @@
 #include <mutex>
 #include <fstream>
 
-#define JUDGE_SYSTEM
 
+//#define JUDGE_SYSTEM
 std::string mode = "None";
 std::string filename = std::string(OUTPUT_PATH) + "NUAA-ZSWW-R";
 std::atomic<int> step(0);
@@ -34,30 +35,70 @@ tcpClient client("192.168.1.66", 6666);
 #endif
 
 void beatSend();
+
 void stepCallback(const rc_msgs::step::ConstPtr &msg);
+
 void isIdentifyCallback(const std_msgs::Bool::ConstPtr &msg);
+
 void calibrateCallback(const rc_msgs::calibrateResult &msg);
+
 void resultCallback(const rc_msgs::results &msg);
 
-Interface* process = nullptr;
+void timeoutControl(const std::string &_mode, int _step);
 
-int main (int argc, char **argv) {
+void callback(rc_msgs::stepConfig &config, uint32_t level);
+
+Interface *process = nullptr;
+
+dynamic_reconfigure::Server<rc_msgs::stepConfig> *server = nullptr;
+
+
+void callback(rc_msgs::stepConfig &config, uint32_t level) {
+    modeMtx.lock();
+    if (mode == "None") {
+        modeMtx.unlock();
+        if (config.mode == "identify") {
+            process = new Identify();            //将整体的类切换至 识别or测量
+        } else {
+            process = new Measure();
+        }
+        if (config.mode != "None")
+            controller = std::thread(timeoutControl, config.mode, config.step);
+    } else {
+        modeMtx.unlock();
+    }
+    modeMtx.lock();
+    mode = config.mode;
+    //给全局变量mode给予读到的mode类型，下次就不进前面的判断了
+    modeMtx.unlock();
+    step = config.step;
+    ROS_INFO("Now:  step: %d    ,mode: %s",
+             config.step, config.mode.c_str());
+}
+
+
+int main(int argc, char **argv) {
     ros::init(argc, argv, "scheduler");
     ros::NodeHandle nh;
 
-    endPub = nh.advertise<std_msgs::Bool>("/ifend", 1);
+    //endPub = nh.advertise<std_msgs::Bool>("/ifend", 1);
     beatPub = nh.advertise<std_msgs::Bool>("/main_beat", 1);
 
-    ros::Subscriber stepSub = nh.subscribe("/step", 1, stepCallback);
+    //ros::Subscriber stepSub = nh.subscribe("/step", 1, stepCallback);
     ros::Subscriber isIdentifySub = nh.subscribe("/isIdentify", 1, isIdentifyCallback);
     ros::Subscriber calibrateSub = nh.subscribe("/calibrateResult", 3, calibrateCallback);
     ros::Subscriber resultSub = nh.subscribe("/rcnn_results", 3, resultCallback);
+    dynamic_reconfigure::Server<rc_msgs::stepConfig> _server;
+    dynamic_reconfigure::Server<rc_msgs::stepConfig>::CallbackType f;
+    server = &_server;
+    f = boost::bind(&callback, _1, _2);
+    _server.setCallback(f);
 
+    //ROS_INFO("Spinning node");
+    //ros::spin();
     std::thread beatThread(beatSend);
-
     ros::MultiThreadedSpinner spinner(2);
     spinner.spin();
-
     is_running = false;
     beatThread.join();
     controller.join();
@@ -71,7 +112,7 @@ inline void startTimer() {
 #endif
 }
 
-void saveResult(const std::string& res) {
+void saveResult(const std::string &res) {
     modeMtx.lock();
     if (mode == "identify") {
         modeMtx.unlock();
@@ -89,48 +130,62 @@ void saveResult(const std::string& res) {
 }
 
 void endProcess() {
+    rc_msgs::stepConfig config;
     finish = true;
     std_msgs::Bool msg;
     mtx.lock();
     process->calcResult();
-    std::string res = process->getResult();
+    std::string res = process->getResult();      //将process中输出的结果导出
     mtx.unlock();
     saveResult(res);
-    msg.data = true;
-    endPub.publish(msg);
+    step = 8;
+    config.step = 8;
+    server->updateConfig(config);
+
     mtx.lock();
     delete process;
     process = nullptr;
     mtx.unlock();
     step = 0;
     isCalibrate = false;
+
     modeMtx.lock();
     mode = "None";
     modeMtx.unlock();
 }
 
-void timeoutControl(const std::string& _mode, int _step) {
+void timeoutControl(const std::string &_mode, int _step) {
+    rc_msgs::stepConfig config;
     startTimer();
     if (_mode == "identify") {
         if (_step == 1) {
             std_msgs::Bool msg;
             filename += "2.txt";
+
             process->dt = Interface::SQUIRE55;
             ros::Duration(15).sleep();
+
             mtx.lock();
             process->calcResult();
             mtx.unlock();
-            msg.data = false;
-            endPub.publish(msg);
+
+            step++;
+            config.step = step;
+            server->updateConfig(config);
+
             ros::Duration(20).sleep();
             mtx.lock();
             process->calcResult();
             mtx.unlock();
-            msg.data = false;
-            endPub.publish(msg);
+
+            step++;
+            config.step = step;
+            server->updateConfig(config);
             ros::Duration(35).sleep();
+
             endProcess();
-        } if (_step == 7) {
+        }
+        if (_step == 7) {
             process->dt = Interface::CIRCLE60;
             filename += "1.txt";
             ros::Duration(20).sleep();
@@ -151,33 +206,13 @@ void timeoutControl(const std::string& _mode, int _step) {
     }
 }
 
+
 void beatSend() {
-    while(is_running) {
+    while (is_running) {
         std_msgs::Bool beat;
         beat.data = true;
         beatPub.publish(beat);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    }
-}
-
-void stepCallback(const rc_msgs::step::ConstPtr &msg) {
-    modeMtx.lock();
-    if (mode == "None") {
-        modeMtx.unlock();
-        if (msg->mode == "identify") {
-            process = new Identify();
-        } else {
-            process = new Measure();
-        }
-        controller = std::thread(timeoutControl, msg->mode, msg->data);
-    } else {
-        modeMtx.unlock();
-    }
-    modeMtx.lock();
-    mode = msg->mode;
-    modeMtx.unlock();
-    if (msg->data == 1 || msg->data == 4 || msg->data == 7 || msg->data == 8) {
-        step = msg->data;
     }
 }
 
@@ -205,7 +240,7 @@ void calibrateCallback(const rc_msgs::calibrateResult &msg) {
     if (isCalibrate && mode != "None" && !finish) {
         modeMtx.unlock();
         Interface::points pos;
-        for (const auto &point : msg.data) {
+        for (const auto &point: msg.data) {
             pos.push_back(Interface::point_t(point.x, point.y));
         }
         mtx.lock();

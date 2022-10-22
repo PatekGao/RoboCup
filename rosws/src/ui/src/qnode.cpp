@@ -5,6 +5,8 @@
 #include <sstream>
 #include "ui/qnode.hpp"
 #include "rc_msgs/results.h"
+#include "rc_msgs/stepConfig.h"
+
 
 namespace ui {
 
@@ -14,10 +16,12 @@ namespace ui {
     bool stf[3] = {false, false, false};        //发送用status
     std::string mode{"mode"};
 
+
 // qt多线程初始化
     QNode::QNode(int argc, char **argv) :
             init_argc(argc),
-            init_argv(argv) {
+            init_argv(argv),
+            client("/scheduler", boost::bind(&QNode::callback, this, _1)) {
         qRegisterMetaType<bool>("bool");
     }
 
@@ -30,10 +34,29 @@ namespace ui {
         wait();
     }
 
+    void QNode::callback(const rc_msgs::stepConfig &config) {
+        step = config.step;
+        mode = config.mode;
+        if (step == 8) {
+            Q_EMIT complete();        // 释放UI中锁定资源
+            log(Info, std::string("ifend  true: ") + std::to_string(step));
+            std_msgs::Bool identify;
+            identify.data = false;
+            indentifyControler.publish(identify);
+            // 之后在这里加上识别完成后显示结果的东西
+        } else if (step == 2 || step == 5) {
+            rotate.updateBegin();
+            log(Info, std::string("ifend  step: ") + std::to_string(step));
+            std_msgs::Bool identify;
+            identify.data = false;
+            indentifyControler.publish(identify);
+        }
+    }
+
 // 初始化ros服务
     bool QNode::init() {
         rotateImg = cv::imread(std::string(RESOURCE_PATH) + "rotate.png");
-        ros::init(init_argc, init_argv, "ui_node");
+        //ros::init(init_argc, init_argv, "ui_node");
         if (!ros::master::check()) {
             return false;
         }
@@ -49,14 +72,20 @@ namespace ui {
         rotate.node = &n;
 
         // topic相关
-        ros::Subscriber resultImageSub = n.subscribe("/rcnn_results", 1, &ui::QNode::resultImageCallback, this);
-        ros::Subscriber rawImageSub = n.subscribe("/raw_img", 1, &ui::QNode::rawImageCallback, this);
-        ros::Subscriber beatSub = n.subscribe("/main_beat", 1, &ui::QNode::beatCallback, this);
-        ros::Subscriber nnBeatSub = n.subscribe("/nn_beat", 1, &ui::QNode::nnBeatCallback, this);
-        ros::Subscriber endSub = n.subscribe("/ifend", 1, &ui::QNode::endCallback, this);
-        ros::Subscriber deskSub = n.subscribe("/calibrateResult", 1, &ui::QNode::deskCallback, this);
-        stepPublisher = n.advertise<rc_msgs::step>("/step", 10);
+        ros::Subscriber resultImageSub = n.subscribe("/rcnn_results", 1,
+                                                       &ui::QNode::resultImageCallback, this);
+        ros::Subscriber rawImageSub = n.subscribe("/raw_img", 1,
+                                                       &ui::QNode::rawImageCallback, this);
+        ros::Subscriber rawImageDepthSub = n.subscribe("/raw_img_depth", 1,
+                                                       &ui::QNode::rawImageDepthCallback, this);
+        ros::Subscriber beatSub = n.subscribe("/main_beat", 1,
+                                                       &ui::QNode::beatCallback, this);
+        ros::Subscriber nnBeatSub = n.subscribe("/nn_beat", 1,
+                                                       &ui::QNode::nnBeatCallback, this);
+        ros::Subscriber deskSub = n.subscribe("/calibrateResult", 1,
+                                                       &ui::QNode::deskCallback, this);
         indentifyControler = n.advertise<std_msgs::Bool>("/isIdentify", 1);
+
 
         ros::Rate loop_rate(30);
         int count = 0;
@@ -73,11 +102,9 @@ namespace ui {
             if (step != stt && step != end) {
                 stt = step;
                 rotate.ss = step;
-                rc_msgs::step msg;
-                msg.data = (short)step;
-                msg.mode = mode;
-                stepPublisher.publish(msg);
-                log(Info, std::string("Now step: ") + std::to_string(msg.data));
+
+                log(Info, std::string("Now step: ") +
+                          std::to_string(config.step));
                 std::string ll;
                 switch (step) {
                     case -1:
@@ -149,6 +176,12 @@ namespace ui {
         std_msgs::Bool identify;
         identify.data = true;
         indentifyControler.publish(identify);
+
+        config.step = step;
+        config.mode = mode;
+        client.setConfiguration(config);
+        ROS_INFO("Now:  step: %d    ,mode: %s",
+                 config.step, config.mode.c_str());
     }
 
 // 日志记录函数
@@ -206,19 +239,26 @@ namespace ui {
         }
     }
 
+    void QNode::rawImageDepthCallback(const sensor_msgs::ImageConstPtr &msg) {
+        try {
+            depthImg = cv_bridge::toCvShare(msg, "mono8")->image.clone();
+        }
+        catch (cv_bridge::Exception &e) {
+            ROS_ERROR("cv_bridge exception: %s", e.what());
+            return;
+        }
+    }
+
 // 获取原始图像回调
-    void QNode::rawImageCallback(const rc_msgs::raw_imgConstPtr &msg) {
+    void QNode::rawImageCallback(const sensor_msgs::ImageConstPtr &msg) {
         status[0] = true;
-        //ROS_WARN("receving img");
-        //cv::Mat color, depth;
         try {
             //对colorImg进行修改即可修改ui显示结果
             if (step == 0 || step == 8) {
-                colorImg = cv_bridge::toCvShare(msg->color, msg, "bgr8")->image.clone();
+                colorImg = cv_bridge::toCvShare(msg, "bgr8")->image.clone();
             } else if (step == 2 || step == 5 || step == 3 || step == 6) {
                 colorImg = rotateImg;
             }
-            depthImg = cv_bridge::toCvShare(msg->depth, msg, "mono8")->image.clone();
         }
         catch (cv_bridge::Exception &e) {
             ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -226,12 +266,16 @@ namespace ui {
         }
         if (step == 2 || step == 3 || step == 5 || step == 6) {
             int t = rotate.getStep(colorImg, depthImg, step);
-            if (t == 2) {
+            if (t == 2 && (step == 3 || step == 6)) {
                 step++;
                 log(Warn, std::string("Rotating time out!!!"));
-            } else if (t == 3) {
+                config.step = step;
+                client.setConfiguration(config);
+            } else if (t == 3 && (step == 2 || step == 5)) {
                 step++;
                 log(Warn, std::string("Waiting for rotating time out!!!"));
+                config.step = step;
+                client.setConfiguration(config);
             } else if (t == 1) {
                 if (step == 3 || step == 6) {
                     std_msgs::Bool identify;
@@ -239,6 +283,8 @@ namespace ui {
                     indentifyControler.publish(identify);
                 }
                 step++;
+                config.step = step;
+                client.setConfiguration(config);
             }
             //log(Info,std::string("Now MSE: ")+std::to_string(rotate.lastMSE));
         }
@@ -257,36 +303,7 @@ namespace ui {
         status[2] = true;
     }
 
-// main识别结束回调
-    void QNode::endCallback(const std_msgs::Bool::ConstPtr &msg) {
-        //log(Info,std::string("recive ifend"));
-        if (msg->data) {
-            if (step == 7) {
-                Q_EMIT complete();        // 释放UI中锁定资源
-                step = 8;
-                log(Info, std::string("ifend  true: ") + std::to_string(step));
-
-                std_msgs::Bool identify;
-                identify.data = false;
-                indentifyControler.publish(identify);
-                // 之后在这里加上识别完成后显示结果的东西
-            }
-        } else {
-            if (step == 1 || step == 4 || step == 7) {
-                step++;
-                rotate.updateBegin();
-                log(Info, std::string("ifend  step: ") + std::to_string(step));
-                if (step == 8) {
-                    Q_EMIT complete();
-                }
-                std_msgs::Bool identify;
-                identify.data = false;
-                indentifyControler.publish(identify);
-            }
-        }
-    }
-
-    void QNode::deskCallback(const rc_msgs::calibrateResult::ConstPtr& msg) {
+    void QNode::deskCallback(const rc_msgs::calibrateResult::ConstPtr &msg) {
         imageMtx.lock();
         lastDesk.clear();
         lastDesk.emplace_back(msg->data[1].x, msg->data[1].y);
@@ -297,4 +314,4 @@ namespace ui {
         cv::polylines(colorImg, lastDesk, 1, cv::Scalar(0xff, 0xcc, 0x66));
         imageMtx.unlock();
     }
-}  // 命名空间 ui 结束
+}  // namespace ui

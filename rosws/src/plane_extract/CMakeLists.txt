@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
     rc_msgs
     cv_bridge
     image_transport
+    dynamic_reconfigure
     )
 find_package(realsense2 REQUIRED)
 find_package(OpenCV  REQUIRED)
