@@ -37,7 +37,6 @@
 #include "rc_msgs/stepConfig.h"
 #include "std_msgs/Bool.h"
 #include <mutex>
-#include <dynamic_reconfigure/server.h>
 #include <dynamic_reconfigure/client.h>
 /*****************************************************************************
 ** Namespaces
