@@ -15,7 +15,6 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <std_msgs/Bool.h>
-#include"rc_msgs/raw_img.h"
 //#include "preprocess.h"
 
 using namespace std;
@@ -27,15 +26,18 @@ Size dist_size=small_size;
 
 //add your video path here
 string video_source="/home/lbw/RC2021-2/src/2020RC-main/video_pub/test.mp4";
-
+ros::Publisher img_pub;
+ros::Publisher img_depth_pub;
 
 
 int main(int argc, char **argv)
 {
   ros::init(argc,argv,"video_publisher");
   ros::NodeHandle nh;
-  ros::Publisher pub = nh.advertise<rc_msgs::raw_img>("/raw_img", 1);
-  rc_msgs::raw_img img_msg;
+    img_pub = nh.advertise<sensor_msgs::Image>("/raw_img", 10);
+    img_depth_pub = nh.advertise<sensor_msgs::Image>("/raw_img_depth", 10);
+    sensor_msgs::Image img_msg;
+    sensor_msgs::Image img_msg_depth;
 
   //nh.getParam("/video_source",video_source);
   ros::Rate loop_rate(30);
@@ -80,9 +82,12 @@ int main(int argc, char **argv)
    	color_msg->header.stamp = ros::Time::now();
 		sensor_msgs::ImagePtr depth_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", depth).toImageMsg();
     depth_msg->header.stamp = ros::Time::now();
-    img_msg.color = *color_msg;
-		img_msg.depth = *depth_msg;
-    pub.publish(img_msg);
+
+      img_msg = *color_msg;
+      img_msg_depth = *depth_msg;
+
+      img_depth_pub.publish(img_msg_depth);
+      img_pub.publish(img_msg);
 
     ros::spinOnce();
     loop_rate.sleep();

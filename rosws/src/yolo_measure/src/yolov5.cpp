@@ -6,10 +6,10 @@
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 #include <dynamic_reconfigure/client.h>
+#include <sensor_msgs/Image.h>
 #include "rc_msgs/detection.h"
 #include "rc_msgs/results.h"
 #include "rc_msgs/point.h"
-#include "rc_msgs/raw_img.h"
 #include "std_msgs/Bool.h"
 #include "yolo/cuda_utils.h"
 #include "yolo/logging.h"
@@ -321,12 +321,12 @@ cudaStream_t stream;
 float prob[BATCH_SIZE * OUTPUT_SIZE];
 int inputIndex;
 
-void imageCallback(const rc_msgs::raw_img::ConstPtr &msg) {
+void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
     if (!isIdentify) {
         return;
     }
     rc_msgs::results Result;
-    cv::Mat img = cv_bridge::toCvCopy(msg->color, sensor_msgs::image_encodings::BGR8)->image;
+    cv::Mat img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
     Result.step = step;
 
     float* buffer_idx = (float*)buffers[inputIndex];
