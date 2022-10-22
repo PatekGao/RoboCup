@@ -233,7 +233,7 @@ namespace ui {
         }
     }
 
-    void QNode::rawImageDepthCallback(const sensor_msgs::ImageConstPtr& msg) {
+    void QNode::rawImageDepthCallback(const sensor_msgs::ImageConstPtr &msg) {
         try {
             depthImg = cv_bridge::toCvShare(msg, "mono8")->image.clone();
         }
@@ -244,10 +244,8 @@ namespace ui {
     }
 
 // 获取原始图像回调
-    void QNode::rawImageCallback(const sensor_msgs::ImageConstPtr& msg) {
+    void QNode::rawImageCallback(const sensor_msgs::ImageConstPtr &msg) {
         status[0] = true;
-        //ROS_WARN("receving img");
-        //cv::Mat color, depth;
         try {
             //对colorImg进行修改即可修改ui显示结果
             if (step == 0 || step == 8) {

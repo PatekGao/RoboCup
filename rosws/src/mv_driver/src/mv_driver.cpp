@@ -45,9 +45,6 @@ sensor_msgs::Image img_msg_depth;
 sensor_msgs::PointCloud2 cloudmsg;
 Mat depth;
 
-//rs2::frameset frame_set;
-
-
 
 static void change_sensor_option(const rs2::sensor &sensor, float value = 24, rs2_option option_type = rs2_option(15)) {
     if (!sensor.supports(option_type)) {
@@ -120,11 +117,9 @@ void get_img(ros::NodeHandle nh) {
     cfg.enable_stream(RS2_STREAM_DEPTH, 640, 480, RS2_FORMAT_Z16, 30);
 
     rs2::pipeline_profile selection = pipe.start(cfg);
-//    auto depth_stream=selection.get_stream(RS2_STREAM_DEPTH).as<rs2::video_stream_profile>();
-//    auto i=depth_stream.get_intrinsics();
+
     rs2_stream align_to = RS2_STREAM_COLOR;
     rs2::align align(align_to);
-    //cout<<"width:"<<i.width<<"height:"<<i.height<<"ppx:"<<i.ppx<<"ppy:"<<i.ppy<<"fx:"<<i.fx<<"fy:"<<i.fy<<"dis model:"<<i.model<<endl;
 
 
     while (ros::ok()) {
@@ -157,7 +152,6 @@ void get_img(ros::NodeHandle nh) {
         ushort *p;
         ushort *q;
 
-        //float scale = frames.get_depth_scale();
         for (int y = 0; y < 480; y++) {
             q = deep.ptr<ushort>(y);
             for (int x = 0; x < 640; x++) {
