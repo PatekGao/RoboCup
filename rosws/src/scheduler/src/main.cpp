@@ -7,6 +7,7 @@
 #include "scheduler/tcpClient.h"
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
+#include <dynamic_reconfigure/server.h>
 #include "rc_msgs/step.h"
 #include "rc_msgs/results.h"
 #include "rc_msgs/calibrateResult.h"
@@ -15,7 +16,7 @@
 #include <atomic>
 #include <mutex>
 #include <fstream>
-#include <dynamic_reconfigure/server.h>
+
 
 //#define JUDGE_SYSTEM
 std::string mode = "None";
@@ -34,15 +35,22 @@ tcpClient client("192.168.1.66", 6666);
 #endif
 
 void beatSend();
-void stepCallback(const rc_msgs::step::ConstPtr &msg);
-void isIdentifyCallback(const std_msgs::Bool::ConstPtr &msg);
-void calibrateCallback(const rc_msgs::calibrateResult &msg);
-void resultCallback(const rc_msgs::results &msg);
-void timeoutControl(const std::string& _mode, int _step);
-void callback(rc_msgs::stepConfig &config, uint32_t level);
-Interface* process = nullptr;
 
-dynamic_reconfigure::Server<rc_msgs::stepConfig>* server = nullptr;
+void stepCallback(const rc_msgs::step::ConstPtr &msg);
+
+void isIdentifyCallback(const std_msgs::Bool::ConstPtr &msg);
+
+void calibrateCallback(const rc_msgs::calibrateResult &msg);
+
+void resultCallback(const rc_msgs::results &msg);
+
+void timeoutControl(const std::string &_mode, int _step);
+
+void callback(rc_msgs::stepConfig &config, uint32_t level);
+
+Interface *process = nullptr;
+
+dynamic_reconfigure::Server<rc_msgs::stepConfig> *server = nullptr;
 
 
 void callback(rc_msgs::stepConfig &config, uint32_t level) {
@@ -54,22 +62,22 @@ void callback(rc_msgs::stepConfig &config, uint32_t level) {
         } else {
             process = new Measure();
         }
-        if(config.mode!="None")
+        if (config.mode != "None")
             controller = std::thread(timeoutControl, config.mode, config.step);
     } else {
         modeMtx.unlock();
     }
     modeMtx.lock();
-    mode =  config.mode;
+    mode = config.mode;
     //给全局变量mode给予读到的mode类型，下次就不进前面的判断了
     modeMtx.unlock();
-    step =  config.step;
+    step = config.step;
     ROS_INFO("Now:  step: %d    ,mode: %s",
-             config.step,config.mode.c_str());
+             config.step, config.mode.c_str());
 }
 
 
-int main (int argc, char **argv) {
+int main(int argc, char **argv) {
     ros::init(argc, argv, "scheduler");
     ros::NodeHandle nh;
 
@@ -104,7 +112,7 @@ inline void startTimer() {
 #endif
 }
 
-void saveResult(const std::string& res) {
+void saveResult(const std::string &res) {
     modeMtx.lock();
     if (mode == "identify") {
         modeMtx.unlock();
@@ -130,8 +138,8 @@ void endProcess() {
     std::string res = process->getResult();      //将process中输出的结果导出
     mtx.unlock();
     saveResult(res);
-    step=8;
-    config.step=8;
+    step = 8;
+    config.step = 8;
     server->updateConfig(config);
 
     mtx.lock();
@@ -146,7 +154,7 @@ void endProcess() {
     modeMtx.unlock();
 }
 
-void timeoutControl(const std::string& _mode, int _step) {
+void timeoutControl(const std::string &_mode, int _step) {
     rc_msgs::stepConfig config;
     startTimer();
     if (_mode == "identify") {
@@ -162,7 +170,7 @@ void timeoutControl(const std::string& _mode, int _step) {
             mtx.unlock();
 
             step++;
-            config.step=step;
+            config.step = step;
             server->updateConfig(config);
 
             ros::Duration(20).sleep();
@@ -171,12 +179,13 @@ void timeoutControl(const std::string& _mode, int _step) {
             mtx.unlock();
 
             step++;
-            config.step=step;
+            config.step = step;
             server->updateConfig(config);
             ros::Duration(35).sleep();
 
             endProcess();
-        } if (_step == 7) {
+        }
+        if (_step == 7) {
             process->dt = Interface::CIRCLE60;
             filename += "1.txt";
             ros::Duration(20).sleep();
@@ -199,7 +208,7 @@ void timeoutControl(const std::string& _mode, int _step) {
 
 
 void beatSend() {
-    while(is_running) {
+    while (is_running) {
         std_msgs::Bool beat;
         beat.data = true;
         beatPub.publish(beat);
@@ -231,7 +240,7 @@ void calibrateCallback(const rc_msgs::calibrateResult &msg) {
     if (isCalibrate && mode != "None" && !finish) {
         modeMtx.unlock();
         Interface::points pos;
-        for (const auto &point : msg.data) {
+        for (const auto &point: msg.data) {
             pos.push_back(Interface::point_t(point.x, point.y));
         }
         mtx.lock();

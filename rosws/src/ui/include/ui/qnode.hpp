@@ -24,20 +24,22 @@
 
 #endif
 
-#include <string>
-#include <QThread>
-#include <QStringListModel>
-#include <opencv2/opencv.hpp>
-#include <cv_bridge/cv_bridge.h>
-#include <sensor_msgs/Image.h>
-#include <image_transport/image_transport.h>
 #include "ui/rotation_recongnition.hpp"
 #include "rc_msgs/results.h"
 #include "rc_msgs/calibrateResult.h"
 #include "rc_msgs/stepConfig.h"
 #include "std_msgs/Bool.h"
-#include <mutex>
+#include <string>
+#include <QThread>
+#include <vector>
+#include <QStringListModel>
+#include <opencv2/opencv.hpp>
+#include <cv_bridge/cv_bridge.h>
 #include <dynamic_reconfigure/client.h>
+#include <sensor_msgs/Image.h>
+#include <image_transport/image_transport.h>
+#include <mutex>
+
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
@@ -48,11 +50,13 @@ namespace ui {
 ** Class
 *****************************************************************************/
 
-    class QNode : public QThread {
+class QNode : public QThread {
     Q_OBJECT
+
     public:
         cv::Mat colorImg, depthImg;
-        turn2 rotate;        // 修改此处切换旋转判定方案，turn为连续判定，turn2为MSE和判定
+        turn2 rotate;        // 修改此处切换旋转判定方案，
+                            // turn为连续判定，turn2为MSE和判定
         std::mutex imageMtx;
         dynamic_reconfigure::Client<rc_msgs::stepConfig> client;
         rc_msgs::stepConfig config;

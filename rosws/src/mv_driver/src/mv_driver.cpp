@@ -46,7 +46,8 @@ sensor_msgs::PointCloud2 cloudmsg;
 Mat depth;
 
 
-static void change_sensor_option(const rs2::sensor &sensor, float value = 24, rs2_option option_type = rs2_option(15)) {
+static void change_sensor_option(const rs2::sensor &sensor,
+                                 float value = 24, rs2_option option_type = rs2_option(15)) {
     if (!sensor.supports(option_type)) {
         std::cerr << "This option is not supported by this sensor" << std::endl;
         return;
@@ -69,7 +70,7 @@ pcl_ptr points_to_pcl(const rs2::points &points) {
     cloud->is_dense = false;
     cloud->points.resize(points.size());
     auto ptr = points.get_vertices();
-    for (auto &p: cloud->points) {
+    for (auto &p : cloud->points) {
         p.x = ptr->x;
         p.y = ptr->y;
         p.z = ptr->z;
@@ -103,15 +104,13 @@ void get_img(ros::NodeHandle nh) {
     rs2::device dev = list.front();
 
     auto sensors = dev.query_sensors();
-    for (const auto &sensor: sensors) {
+    for (const auto &sensor : sensors) {
         setToDefault(sensor);
     }
     change_sensor_option(sensors[0]);
 
     rs2::pipeline pipe;
-    //Construct a pipeline which abstracts the device
     rs2::config cfg;
-    //Create a configuration for configuring the pipeline with a non default profile
 
     cfg.enable_stream(RS2_STREAM_COLOR, 640, 480, RS2_FORMAT_BGR8, 30);
     cfg.enable_stream(RS2_STREAM_DEPTH, 640, 480, RS2_FORMAT_Z16, 30);
@@ -155,30 +154,25 @@ void get_img(ros::NodeHandle nh) {
         for (int y = 0; y < 480; y++) {
             q = deep.ptr<ushort>(y);
             for (int x = 0; x < 640; x++) {
-                /*dst->imageData[y * depth_info.height + x]
-                = depth__data[y * depth_info.height + x]*/;
                 ushort d = 0.125 * q[x];
-                //cout << "d:  " << d << endl;
                 p = dst3.ptr<ushort>(y);
-
                 //距离在0.2m至1.2	int k = 0;m之间
-
                 if (d > 0) {
                     p[x] = 255 - 0.255 * (d - 200);
-                    //cout << "p:  " << p[x] << endl;
                 } else
                     p[x] = 0;
             }
         }
         dst3.convertTo(depth_, CV_8UC1, 1);
 
-
         toROSMsg(*pcl_points, cloudmsg);
         sensor_msgs::ImagePtr color_msg =
-                cv_bridge::CvImage(std_msgs::Header(), "bgr8", color).toImageMsg();
+                cv_bridge::CvImage(std_msgs::Header(),
+                                   "bgr8", color).toImageMsg();
         color_msg->header.stamp = ros::Time::now();
         sensor_msgs::ImagePtr depth_msg =
-                cv_bridge::CvImage(std_msgs::Header(), "mono8", depth_).toImageMsg();
+                cv_bridge::CvImage(std_msgs::Header(),
+                                   "mono8", depth_).toImageMsg();
         depth_msg->header.stamp = ros::Time::now();
 
         img_msg = *color_msg;
@@ -188,7 +182,6 @@ void get_img(ros::NodeHandle nh) {
         img_pub.publish(img_msg);
 
         cloud_pub.publish(cloudmsg);
-
     }
     change_sensor_option(sensors[0], 0);
 }

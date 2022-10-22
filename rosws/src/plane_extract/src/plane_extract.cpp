@@ -1,10 +1,9 @@
-#include<ros/ros.h>
-#include"rc_msgs/raw_img.h"
 #include "rc_msgs/stepConfig.h"
 #include "rc_msgs/point.h"
-#include "rc_msgs/step.h"
-#include"rc_msgs/calibrateResult.h"
-#include"std_msgs/Bool.h"
+#include "rc_msgs/calibrateResult.h"
+#include "std_msgs/Bool.h"
+#include <ros/ros.h>
+#include <dynamic_reconfigure/client.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <cv_bridge/cv_bridge.h>
@@ -25,11 +24,8 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/common/distances.h>
-
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
-
-#include <dynamic_reconfigure/client.h>
 #include <iostream>
 #include<vector>
 
@@ -58,8 +54,8 @@ void identifyCallback(const std_msgs::Bool::ConstPtr &msg) {
 }
 
 void callback(const rc_msgs::stepConfig &config) {
-    step=config.step;
-    mode=config.mode;
+    step = config.step;
+    mode = config.mode;
 
 }
 
@@ -70,17 +66,16 @@ const double fx = 1395.56689453125;
 const double fy = 1395.567138671875;
 
 
-void cloudCallback(const sensor_msgs::PointCloud2::ConstPtr &msg)
-{
+void cloudCallback(const sensor_msgs::PointCloud2::ConstPtr &msg) {
     rs2_intrinsics intrin;
-    intrin.width=640;
-    intrin.height=480;
-    intrin.ppx=308.783;
-    intrin.ppy=237.412;
-    intrin.fx=620.252;
-    intrin.fy=620.252;
-    intrin.model=RS2_DISTORTION_NONE;
-    for(int i=0;i<5;i++){intrin.coeffs[i]=0;}
+    intrin.width = 640;
+    intrin.height = 480;
+    intrin.ppx = 308.783;
+    intrin.ppy = 237.412;
+    intrin.fx = 620.252;
+    intrin.fy = 620.252;
+    intrin.model = RS2_DISTORTION_NONE;
+    for (int i = 0; i < 5; i++) { intrin.coeffs[i] = 0; }
     if (isIdentify) {
         //plane_extract
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
@@ -88,7 +83,7 @@ void cloudCallback(const sensor_msgs::PointCloud2::ConstPtr &msg)
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_p(new pcl::PointCloud<pcl::PointXYZ>), cloud_f(
                 new pcl::PointCloud<pcl::PointXYZ>), cloud_filtered(new pcl::PointCloud<pcl::PointXYZ>);
         // Create the filtering object: downsample the dataset using a leaf size of 1cm
-        fromROSMsg(*msg,*cloud);
+        fromROSMsg(*msg, *cloud);
         pcl::toPCLPointCloud2(*cloud, *cloud_blob);
         pcl::VoxelGrid<pcl::PCLPointCloud2> sor;
         sor.setInputCloud(cloud_blob);
@@ -140,33 +135,34 @@ void cloudCallback(const sensor_msgs::PointCloud2::ConstPtr &msg)
             extract.filter(*cloud_f);
             cloud_filtered.swap(cloud_f);
 
-            pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
-            tree->setInputCloud (cloud_filtered);
+            pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
+            tree->setInputCloud(cloud_filtered);
 
             std::vector<pcl::PointIndices> cluster_indices;
             pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-            ec.setClusterTolerance (0.03); //设置近邻搜索的搜索半径为2cm
-            ec.setMinClusterSize (1000);    //设置一个聚类需要的最少点数目为100
-            ec.setMaxClusterSize (35000);  //设置一个聚类需要的最大点数目为25000
-            ec.setSearchMethod (tree);     //设置点云的搜索机制
-            ec.setInputCloud (cloud_p); //设置原始点云
-            ec.extract (cluster_indices);  //从点云中提取聚类
+            ec.setClusterTolerance(0.03); //设置近邻搜索的搜索半径为2cm
+            ec.setMinClusterSize(1000);    //设置一个聚类需要的最少点数目为100
+            ec.setMaxClusterSize(35000);  //设置一个聚类需要的最大点数目为25000
+            ec.setSearchMethod(tree);     //设置点云的搜索机制
+            ec.setInputCloud(cloud_p); //设置原始点云
+            ec.extract(cluster_indices);  //从点云中提取聚类
 
-                cout<<cloud_p->size()<<endl;
+            cout << cloud_p->size() << endl;
             // 可视化部分
             // pcl::visualization::PCLVisualizer viewer("segmention");
             int num = cluster_indices.size();
 
-            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
-            for (std::vector<int>::const_iterator pit = cluster_indices.begin ()->indices.begin (); pit != cluster_indices.begin ()->indices.end (); pit++)
-                cloud_cluster->points.push_back (cloud_p->points[*pit]); //*
-            cloud_cluster->width = cloud_cluster->points.size ();
+            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster(new pcl::PointCloud<pcl::PointXYZ>);
+            for (std::vector<int>::const_iterator pit = cluster_indices.begin()->indices.begin();
+                 pit != cluster_indices.begin()->indices.end(); pit++)
+                cloud_cluster->points.push_back(cloud_p->points[*pit]); //*
+            cloud_cluster->width = cloud_cluster->points.size();
             cloud_cluster->height = 1;
             cloud_cluster->is_dense = true;
-            cloud_p=cloud_cluster;
+            cloud_p = cloud_cluster;
 
             double x, y, z;
-            for (int i =cloud_p->size()/20; i < cloud_p->size(); i++) {
+            for (int i = cloud_p->size() / 20; i < cloud_p->size(); i++) {
                 if (isnan(cloud_normals->points[i].normal_x) || isnan(cloud_normals->points[i].normal_y) ||
                     isnan(cloud_normals->points[i].normal_z)) { continue; }
                 else {
@@ -177,7 +173,7 @@ void cloudCallback(const sensor_msgs::PointCloud2::ConstPtr &msg)
                 }
 
             }
-            if(abs(x)>0.2)
+            if (abs(x) > 0.2)
                 continue;
 
             pcl::PointXYZ min, max, pmin, pmax, p;
@@ -3649,8 +3645,19 @@ void cloudCallback(const sensor_msgs::PointCloud2::ConstPtr &msg)
                   2 * y0 * y2 * z0 * z1 - 2 * y0 * y2 * z0 * z2 + pow(y1, 2) * pow(z0, 2) - 2 * y1 * y2 * pow(z0, 2) +
                   pow(y2, 2) * pow(z0, 2));
 
-            float point1[3],point2[3],point3[3],point4[3],point11[2],point22[2],point33[2],point44[2];
-            point1[0]=x1;point1[1]=y1;point1[2]=z1;point2[0]=x2;point2[1]=y2;point2[2]=z2;point3[0]=x3;point3[1]=y3;point3[2]=z3;point4[0]=x4;point4[1]=y4;point4[2]=z4;
+            float point1[3], point2[3], point3[3], point4[3], point11[2], point22[2], point33[2], point44[2];
+            point1[0] = x1;
+            point1[1] = y1;
+            point1[2] = z1;
+            point2[0] = x2;
+            point2[1] = y2;
+            point2[2] = z2;
+            point3[0] = x3;
+            point3[1] = y3;
+            point3[2] = z3;
+            point4[0] = x4;
+            point4[1] = y4;
+            point4[2] = z4;
             //std::cerr <<"x3:"<<x33<<" y3:"<<y33<<" x4:"<<x44<<" y4:"<<y44<<endl;
             rs2_project_point_to_pixel(point11, &intrin, point1);
             rs2_project_point_to_pixel(point22, &intrin, point2);
@@ -3666,7 +3673,8 @@ void cloudCallback(const sensor_msgs::PointCloud2::ConstPtr &msg)
             res0[3].x = point44[0];
             res0[3].y = point44[1];
             res.data = res0;
-            cout<<res0[0].x<<" "<<res0[0].y<<""<<res0[1].x<<" "<<res0[1].y<<" "<<res0[2].x<<" "<<res0[2].y<<" "<<res0[3].x<<" "<<res0[3].y<<endl;
+            cout << res0[0].x << " " << res0[0].y << "" << res0[1].x << " " << res0[1].y << " " << res0[2].x << " "
+                 << res0[2].y << " " << res0[3].x << " " << res0[3].y << endl;
             res_pub.publish(res);
         }
     }

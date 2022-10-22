@@ -5,11 +5,11 @@
 #include <thread>
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
+#include <dynamic_reconfigure/client.h>
 #include "rc_msgs/detection.h"
 #include "rc_msgs/results.h"
 #include "rc_msgs/point.h"
 #include "rc_msgs/raw_img.h"
-#include "rc_msgs/step.h"
 #include "std_msgs/Bool.h"
 #include "yolo/cuda_utils.h"
 #include "yolo/logging.h"
@@ -18,7 +18,6 @@
 #include "yolo/calibrator.h"
 #include "yolo/preprocess.h"
 #include "rc_msgs/stepConfig.h"
-#include <dynamic_reconfigure/client.h>
 
 #define USE_FP16  // set USE_INT8 or USE_FP16 or USE_FP32
 #define DEVICE 0  // GPU id

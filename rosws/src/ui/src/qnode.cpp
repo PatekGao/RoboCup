@@ -40,7 +40,6 @@ namespace ui {
         if (step == 8) {
             Q_EMIT complete();        // 释放UI中锁定资源
             log(Info, std::string("ifend  true: ") + std::to_string(step));
-
             std_msgs::Bool identify;
             identify.data = false;
             indentifyControler.publish(identify);
@@ -73,12 +72,18 @@ namespace ui {
         rotate.node = &n;
 
         // topic相关
-        ros::Subscriber resultImageSub = n.subscribe("/rcnn_results", 1, &ui::QNode::resultImageCallback, this);
-        ros::Subscriber rawImageSub = n.subscribe("/raw_img", 1, &ui::QNode::rawImageCallback, this);
-        ros::Subscriber rawImageDepthSub = n.subscribe("/raw_img_depth", 1, &ui::QNode::rawImageDepthCallback, this);
-        ros::Subscriber beatSub = n.subscribe("/main_beat", 1, &ui::QNode::beatCallback, this);
-        ros::Subscriber nnBeatSub = n.subscribe("/nn_beat", 1, &ui::QNode::nnBeatCallback, this);
-        ros::Subscriber deskSub = n.subscribe("/calibrateResult", 1, &ui::QNode::deskCallback, this);
+        ros::Subscriber resultImageSub = n.subscribe("/rcnn_results", 1,
+                                                       &ui::QNode::resultImageCallback, this);
+        ros::Subscriber rawImageSub = n.subscribe("/raw_img", 1,
+                                                       &ui::QNode::rawImageCallback, this);
+        ros::Subscriber rawImageDepthSub = n.subscribe("/raw_img_depth", 1,
+                                                       &ui::QNode::rawImageDepthCallback, this);
+        ros::Subscriber beatSub = n.subscribe("/main_beat", 1,
+                                                       &ui::QNode::beatCallback, this);
+        ros::Subscriber nnBeatSub = n.subscribe("/nn_beat", 1,
+                                                       &ui::QNode::nnBeatCallback, this);
+        ros::Subscriber deskSub = n.subscribe("/calibrateResult", 1,
+                                                       &ui::QNode::deskCallback, this);
         indentifyControler = n.advertise<std_msgs::Bool>("/isIdentify", 1);
 
 
@@ -175,7 +180,8 @@ namespace ui {
         config.step = step;
         config.mode = mode;
         client.setConfiguration(config);
-        ROS_INFO("Now:  step: %d    ,mode: %s", config.step, config.mode.c_str());
+        ROS_INFO("Now:  step: %d    ,mode: %s",
+                 config.step, config.mode.c_str());
     }
 
 // 日志记录函数
@@ -253,7 +259,6 @@ namespace ui {
             } else if (step == 2 || step == 5 || step == 3 || step == 6) {
                 colorImg = rotateImg;
             }
-            //depthImg = cv_bridge::toCvShare(msg->depth, msg, "mono8")->image.clone();
         }
         catch (cv_bridge::Exception &e) {
             ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -271,7 +276,7 @@ namespace ui {
                 log(Warn, std::string("Waiting for rotating time out!!!"));
                 config.step = step;
                 client.setConfiguration(config);
-            } else if (t == 1 && (step == 2 || step == 3 || step == 5 || step == 6)) {
+            } else if (t == 1) {
                 if (step == 3 || step == 6) {
                     std_msgs::Bool identify;
                     identify.data = true;

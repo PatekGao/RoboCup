@@ -23,8 +23,8 @@ i = 0
 path = '/home/bismarck/RC2022/RC2021/data/shot/nn_%i.jpg'
 queue = Queue(maxsize=2)
 
-def img_to_cv2(Image):
-    img_msg = Image
+def img_to_cv2(clour_img):
+    img_msg = clour_img
     dtype = np.dtype("uint8")
     dtype = dtype.newbyteorder('>' if img_msg.is_bigendian else '<')
     image_opencv = np.ndarray(shape=(img_msg.height, img_msg.width, 3),
