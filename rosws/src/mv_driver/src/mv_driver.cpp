@@ -166,14 +166,17 @@ void get_img(ros::NodeHandle nh) {
         dst3.convertTo(depth_, CV_8UC1, 1);
 
         toROSMsg(*pcl_points, cloudmsg);
+        auto timestamp_sync = ros::Time::now();
         sensor_msgs::ImagePtr color_msg =
                 cv_bridge::CvImage(std_msgs::Header(),
                                    "bgr8", color).toImageMsg();
-        color_msg->header.stamp = ros::Time::now();
+        color_msg->header.stamp = timestamp_sync;
         sensor_msgs::ImagePtr depth_msg =
                 cv_bridge::CvImage(std_msgs::Header(),
                                    "mono8", depth_).toImageMsg();
-        depth_msg->header.stamp = ros::Time::now();
+        depth_msg->header.stamp = timestamp_sync;
+
+        cloudmsg.header.stamp = timestamp_sync;
 
         img_msg = *color_msg;
         img_msg_depth = *depth_msg;
