@@ -73,7 +73,7 @@ class ConvertCOCOToYOLO:
 
             # Get required data
             image_id = f'{data[annotation_key][i][img_id]}'
-            category_id = str(int(f'{data[annotation_key][i][cat_id]}') - 1)  # 修改了category_id
+            category_id = f'{data[annotation_key][i][cat_id]-1}'
             bbox = data[annotation_key][i]['bbox']
 
             imgInfo = self.get_img_info(int(image_id))
