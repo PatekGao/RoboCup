@@ -4,3 +4,4 @@ int32 a
 detection[] results
 sensor_msgs/Image color
 sensor_msgs/Image depth
+sensor_msgs/PointCloud2 cloud
