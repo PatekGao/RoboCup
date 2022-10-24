@@ -6,7 +6,7 @@ from pycocotools.coco import COCO
 class ConvertCOCOToYOLO:
     """
     Takes in the path to COCO annotations and outputs YOLO annotations in multiple .txt files.
-    COCO annotation are to be JSON formart as follows:
+    COCO annotation are to be JSON format as follows:
 
         "annotations":{
             "area":2304645,
@@ -15,7 +15,7 @@ class ConvertCOCOToYOLO:
             "category_id":4,
             "bbox":[
                 0::704
-                1:620
+                1:6204
                 2:1401
                 3:1645
             ]
@@ -73,7 +73,7 @@ class ConvertCOCOToYOLO:
 
             # Get required data
             image_id = f'{data[annotation_key][i][img_id]}'
-            category_id = f'{data[annotation_key][i][cat_id]}'
+            category_id = str(int(f'{data[annotation_key][i][cat_id]}') - 1)  # 修改了category_id
             bbox = data[annotation_key][i]['bbox']
 
             imgInfo = self.get_img_info(int(image_id))
