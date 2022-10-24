@@ -10,6 +10,11 @@
 # 3. Launch roscore and your camera node.
 # 4. Run this file. While pressing "Enter" key, one image will be saved.
 
+# roscore
+# rosrun mv_driver mv_driver_node
+# cd /CLionProjects/RoboCup/TrainTools/notebooks
+# python3 shot.py
+
 import rospy
 import cv2
 from sensor_msgs.msg import Image
@@ -23,8 +28,9 @@ i = 0
 path = '/home/bismarck/RC2022/RC2021/data/shot/nn_%i.jpg'
 queue = Queue(maxsize=2)
 
-def img_to_cv2(colour_img):
-    img_msg = colour_img
+
+def img_to_cv2(color_img):
+    img_msg = color_img
     dtype = np.dtype("uint8")
     dtype = dtype.newbyteorder('>' if img_msg.is_bigendian else '<')
     image_opencv = np.ndarray(shape=(img_msg.height, img_msg.width, 3),
