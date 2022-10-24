@@ -177,6 +177,7 @@ void get_img(ros::NodeHandle nh) {
         depth_msg->header.stamp = timestamp_sync;
 
         cloudmsg.header.stamp = timestamp_sync;
+        cloudmsg.header.frame_id = "map";
 
         img_msg = *color_msg;
         img_msg_depth = *depth_msg;
