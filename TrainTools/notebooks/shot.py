@@ -15,23 +15,22 @@
 # cd /CLionProjects/RoboCup/TrainTools/notebooks
 # python3 shot.py
 
-import logging
+import rospy
+import cv2
+from sensor_msgs.msg import Image
+import numpy as np
 import sys
 from queue import Queue
 from threading import Thread
-
-import cv2
-import numpy as np
-import rospy
-from rc_msgs.msg import raw_img
+import logging
 
 i = 0
-path = '/home/stevegao/CLionProjects/RoboCup/TrainTools/shot/nn_%i.jpg'
+path = '/home/bismarck/RC2022/RC2021/data/shot/nn_%i.jpg'
 queue = Queue(maxsize=2)
 
 
-def img_to_cv2(_img_msg: raw_img, _):
-    img_msg = _img_msg.color
+def img_to_cv2(color_img):
+    img_msg = color_img
     dtype = np.dtype("uint8")
     dtype = dtype.newbyteorder('>' if img_msg.is_bigendian else '<')
     image_opencv = np.ndarray(shape=(img_msg.height, img_msg.width, 3),
@@ -58,7 +57,7 @@ def fixLogging(level=logging.WARNING):
 
 if __name__ == '__main__':
     rospy.init_node('shot')
-    sub = rospy.Subscriber('/raw_img', raw_img, img_to_cv2, 1)
+    sub = rospy.Subscriber('/raw_img', Image, img_to_cv2, 1)
     thread = Thread(target=rospy.spin, name='ros', daemon=True)
     thread.start()
     fixLogging(logging.INFO)
