@@ -454,8 +454,10 @@ int main(int argc, char** argv) {
     message_filters::Subscriber<sensor_msgs::PointCloud2>
             cloudSub(n, "/cloud", 1);
 
-    typedef message_filters::sync_policies::ExactTime<sensor_msgs::Image, sensor_msgs::PointCloud2> SyncPolicy;
-    message_filters::Synchronizer<SyncPolicy> sync(SyncPolicy(10), imageSub, cloudSub);
+    typedef message_filters::sync_policies::ExactTime
+            <sensor_msgs::Image, sensor_msgs::PointCloud2> SyncPolicy;
+    message_filters::Synchronizer<SyncPolicy>
+            sync(SyncPolicy(10), imageSub, cloudSub);
     sync.registerCallback(boost::bind(&syncCallback, _1, _2));
 
     //ros::Subscriber imageSub = n.subscribe("/raw_img", 1, &imageCallback);
