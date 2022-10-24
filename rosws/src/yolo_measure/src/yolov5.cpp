@@ -325,12 +325,14 @@ cudaStream_t stream;
 float prob[BATCH_SIZE * OUTPUT_SIZE];
 int inputIndex;
 
-void syncCallback(const sensor_msgs::ImageConstPtr& imgmsg, const sensor_msgs::PointCloud2::ConstPtr &cloudmsg) {
+void syncCallback(const sensor_msgs::ImageConstPtr& imgmsg,
+                  const sensor_msgs::PointCloud2::ConstPtr &cloudmsg) {
     if (!isIdentify) {
         return;
     }
     rc_msgs::results Result;
-    cv::Mat img = cv_bridge::toCvCopy(imgmsg, sensor_msgs::image_encodings::BGR8)->image;
+    cv::Mat img = cv_bridge::toCvCopy(imgmsg,
+                                      sensor_msgs::image_encodings::BGR8)->image;
     Result.step = step;
 
     float* buffer_idx = (float*)buffers[inputIndex];
@@ -447,8 +449,10 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "yolo_measure");
     ros::NodeHandle n;
 
-    message_filters::Subscriber<sensor_msgs::Image> imageSub(n, "/raw_img", 1);
-    message_filters::Subscriber<sensor_msgs::PointCloud2> cloudSub(n, "/cloud", 1);
+    message_filters::Subscriber<sensor_msgs::Image>
+            imageSub(n, "/raw_img", 1);
+    message_filters::Subscriber<sensor_msgs::PointCloud2>
+            cloudSub(n, "/cloud", 1);
 
     typedef message_filters::sync_policies::ExactTime<sensor_msgs::Image, sensor_msgs::PointCloud2> SyncPolicy;
     message_filters::Synchronizer<SyncPolicy> sync(SyncPolicy(10), imageSub, cloudSub);
