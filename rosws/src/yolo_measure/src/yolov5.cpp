@@ -1,8 +1,3 @@
-#include <iostream>
-#include <chrono>
-#include <cmath>
-#include <atomic>
-#include <thread>
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 #include <dynamic_reconfigure/client.h>
@@ -11,6 +6,11 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/exact_time.h>
+#include <iostream>
+#include <chrono>
+#include <cmath>
+#include <atomic>
+#include <thread>
 #include "rc_msgs/detection.h"
 #include "rc_msgs/results.h"
 #include "rc_msgs/point.h"
