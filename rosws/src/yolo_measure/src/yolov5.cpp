@@ -404,6 +404,9 @@ int main(int argc, char** argv) {
     std::string engine_name(ENGINE_PATH);
     engine_name += "/engines/test.engine";
 
+    typedef message_filters::sync_policies::ExactTime
+            <sensor_msgs::Image, sensor_msgs::PointCloud2> SyncPolicy;
+
     std::ifstream file(engine_name, std::ios::binary);
     if (!file.good()) {
         std::cerr << "read " << engine_name << " error!" << std::endl;
@@ -454,8 +457,6 @@ int main(int argc, char** argv) {
     message_filters::Subscriber<sensor_msgs::PointCloud2>
             cloudSub(n, "/cloud", 1);
 
-    typedef message_filters::sync_policies::ExactTime
-            <sensor_msgs::Image, sensor_msgs::PointCloud2> SyncPolicy;
     message_filters::Synchronizer<SyncPolicy>
             sync(SyncPolicy(10), imageSub, cloudSub);
     sync.registerCallback(boost::bind(&syncCallback, _1, _2));
