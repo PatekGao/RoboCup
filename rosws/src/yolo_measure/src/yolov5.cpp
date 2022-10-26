@@ -376,7 +376,7 @@ void syncCallback(const sensor_msgs::ImageConstPtr& imgmsg,
         Result.results.push_back(tmp);
     }
     Result.color = *(cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg());
-    Result.cloud = *cloudmsg;
+    Result.cloud = std::move(*cloudmsg);
 
     resPub.publish(Result);
 }
