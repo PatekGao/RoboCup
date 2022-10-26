@@ -460,7 +460,6 @@ int main(int argc, char** argv) {
             sync(SyncPolicy(10), imageSub, cloudSub);
     sync.registerCallback(boost::bind(&syncCallback, _1, _2));
 
-    //ros::Subscriber imageSub = n.subscribe("/raw_img", 1, &imageCallback);
     ros::Subscriber isIdentifySub = n.subscribe("/isIdentify", 1, &identifyCallback);
     resPub = n.advertise<rc_msgs::results>("/rcnn_results", 20);
     beatPub = n.advertise<std_msgs::Bool>("/nn_beat", 5);
