@@ -37,7 +37,6 @@
 #include <cv_bridge/cv_bridge.h>
 #include <dynamic_reconfigure/client.h>
 #include <sensor_msgs/Image.h>
-#include <sensor_msgs/PointCloud2.h>
 #include <image_transport/image_transport.h>
 #include <mutex>
 
