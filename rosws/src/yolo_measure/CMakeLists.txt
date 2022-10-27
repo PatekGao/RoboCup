@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   dynamic_reconfigure
+  message_filters
 )
 find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
@@ -28,8 +29,8 @@ else()
     message("embed_platform off")
     include_directories(/usr/local/cuda/include)
     link_directories(/usr/local/cuda/lib64)
-    include_directories(/home/robin/TensorRT-7.2.3.4/include)
-    link_directories(/home/robin/TensorRT-7.2.3.4/lib)
+    include_directories(/home/andykong/TensorRT-7.2.3.4/include)
+    link_directories(/home/andykong/TensorRT-7.2.3.4/lib)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Ofast -g -Wfatal-errors -D_MWAITXINTRIN_H_INCLUDED")
