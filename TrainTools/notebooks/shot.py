@@ -20,10 +20,10 @@ from threading import Thread
 import logging
 
 i = 0
-path = '/home/bismarck/RC2022/RC2021/data/shot/nn_%i.jpg'
+path = '/home/robin/Cup_test/RoboCup/TrainTools/notebooks/shot/nn_%i.jpg'
 queue = Queue(maxsize=2)
 
-def img_to_cv2(colour_img):
+def img_to_cv2(colour_img, _):
     img_msg = colour_img
     dtype = np.dtype("uint8")
     dtype = dtype.newbyteorder('>' if img_msg.is_bigendian else '<')
