@@ -25,7 +25,7 @@ from threading import Thread
 import logging
 
 i = 0
-path = '/home/bismarck/RC2022/RC2021/data/shot/nn_%i.jpg'
+path = '/home/stevegao/PycharmProjects/RoboCup/TrainTools/notebooks/shot/nn_%i.jpg'
 queue = Queue(maxsize=2)
 
 
