@@ -10,6 +10,11 @@
 # 3. Launch roscore and your camera node.
 # 4. Run this file. While pressing "Enter" key, one image will be saved.
 
+# roscore
+# rosrun mv_driver mv_driver_node
+# cd /CLionProjects/RoboCup/TrainTools/notebooks
+# python3 shot.py
+
 import rospy
 import cv2
 from sensor_msgs.msg import Image
@@ -22,6 +27,7 @@ import logging
 i = 0
 path = '/home/robin/Cup_test/RoboCup/TrainTools/notebooks/shot/nn_%i.jpg'
 queue = Queue(maxsize=2)
+
 
 def img_to_cv2(colour_img, _):
     img_msg = colour_img

@@ -1,12 +1,16 @@
+#include <ros/ros.h>
+#include <cv_bridge/cv_bridge.h>
+#include <dynamic_reconfigure/client.h>
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <message_filters/subscriber.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/exact_time.h>
 #include <iostream>
 #include <chrono>
 #include <cmath>
 #include <atomic>
 #include <thread>
-#include <ros/ros.h>
-#include <cv_bridge/cv_bridge.h>
-#include <dynamic_reconfigure/client.h>
-#include <sensor_msgs/Image.h>
 #include "rc_msgs/detection.h"
 #include "rc_msgs/results.h"
 #include "rc_msgs/point.h"
@@ -321,12 +325,14 @@ cudaStream_t stream;
 float prob[BATCH_SIZE * OUTPUT_SIZE];
 int inputIndex;
 
-void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
+void syncCallback(const sensor_msgs::ImageConstPtr& imgmsg,
+                  const sensor_msgs::PointCloud2::ConstPtr &cloudmsg) {
     if (!isIdentify) {
         return;
     }
     rc_msgs::results Result;
-    cv::Mat img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
+    cv::Mat img = cv_bridge::toCvCopy(imgmsg,
+                                      sensor_msgs::image_encodings::BGR8)->image;
     Result.step = step;
 
     float* buffer_idx = (float*)buffers[inputIndex];
@@ -370,6 +376,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
         Result.results.push_back(tmp);
     }
     Result.color = *(cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg());
+    Result.cloud = std::move(*cloudmsg);
+
     resPub.publish(Result);
 }
 
@@ -395,6 +403,9 @@ int main(int argc, char** argv) {
 
     std::string engine_name(ENGINE_PATH);
     engine_name += "/engines/test.engine";
+
+    typedef message_filters::sync_policies::ExactTime
+            <sensor_msgs::Image, sensor_msgs::PointCloud2> SyncPolicy;
 
     std::ifstream file(engine_name, std::ios::binary);
     if (!file.good()) {
@@ -441,7 +452,15 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "yolo_measure");
     ros::NodeHandle n;
 
-    ros::Subscriber imageSub = n.subscribe("/raw_img", 1, &imageCallback);
+    message_filters::Subscriber<sensor_msgs::Image>
+            imageSub(n, "/raw_img", 1);
+    message_filters::Subscriber<sensor_msgs::PointCloud2>
+            cloudSub(n, "/cloud", 1);
+
+    message_filters::Synchronizer<SyncPolicy>
+            sync(SyncPolicy(10), imageSub, cloudSub);
+    sync.registerCallback(boost::bind(&syncCallback, _1, _2));
+
     ros::Subscriber isIdentifySub = n.subscribe("/isIdentify", 1, &identifyCallback);
     resPub = n.advertise<rc_msgs::results>("/rcnn_results", 20);
     beatPub = n.advertise<std_msgs::Bool>("/nn_beat", 5);
