@@ -24,11 +24,6 @@
 #include "rc_msgs/point.h"
 #include "std_msgs/Bool.h"
 //msgs  //yolov5
-#include "yolo/cuda_utils.h"
-#include "yolo/logging.h"
-#include "yolo/utils.h"
-#include "yolo/calibrator.h"
-#include "yolo/preprocess.h"
 //yolov5//yolov7
 #include "yolo/yolo.hpp"
 
@@ -154,7 +149,6 @@ float *buffers[2];
 uint8_t *img_host = nullptr;
 uint8_t *img_device = nullptr;
 //IExecutionContext *context;
-cudaStream_t stream;
 //float prob[BATCH_SIZE * OUTPUT_SIZE];
 //int inputIndex;
 
