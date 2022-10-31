@@ -1,4 +1,4 @@
-#include "yolov7trt/yolo.hpp"
+#include "yolo/yolo.hpp"
 #include <NvInfer.h>
 #include <NvOnnxParser.h>
 #include <cuda_runtime.h>
