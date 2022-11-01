@@ -43,8 +43,8 @@ include_directories(
         ${OpenCV_INCLUDE_DIRS}
 )
 
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -O0 -Wfatal-errors -pthread -w -g")
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11 -O0 -Xcompiler -fPIC -g -w ${CUDA_GEN_CODE}")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -O0 -Wfatal-errors -pthread -w -g") # 不需要调试功能后将优化登记改成‘-O3’
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11 -O0 -Xcompiler -fPIC -g -w ${CUDA_GEN_CODE}") # 不需要调试功能后将优化登记改成‘-O3’
 file(GLOB_RECURSE cpp_srcs ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE cuda_srcs ${PROJECT_SOURCE_DIR}/src/*.cu)
 
@@ -71,7 +71,7 @@ target_include_directories(
 
 target_include_directories(
         ${PROJECT_NAME}_node PRIVATE
-        $/home/stevegao/TensorRT-7.2.3.4/include
+        $/home/stevegao/TensorRT-7.2.3.4/include # 这里是tensorrt的include路径，需检查并修改
 )
 
 target_link_libraries(cucodes nvinfer nvonnxparser)
@@ -81,19 +81,18 @@ target_link_libraries(${PROJECT_NAME}_node cucodes)
 target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
 
 
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64") # 如果是jetson nano
     message("embed_platform on")
     include_directories(/usr/local/cuda/targets/aarch64-linux/include)
     link_directories(/usr/local/cuda/targets/aarch64-linux/lib)
-else()
+else() # 如果是x86
     message("embed_platform off")
     include_directories(/usr/local/cuda/include)
     link_directories(/usr/local/cuda/lib64)
-    include_directories(/home/stevegao/TensorRT-7.2.3.4/include)
-    link_directories(/home/stevegao/TensorRT-7.2.3.4/lib)
+    include_directories(/home/stevegao/TensorRT-7.2.3.4/include) # 这里是tensorrt的路径，需检查并修改
+    link_directories(/home/stevegao/TensorRT-7.2.3.4/lib) # 这里是tensorrt的路径，需检查并修改
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Ofast -g -Wfatal-errors -D_MWAITXINTRIN_H_INCLUDED")
 
 if(UNIX)
     add_definitions(-O2 -pthread)

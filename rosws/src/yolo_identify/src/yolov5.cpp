@@ -31,7 +31,7 @@ using namespace std;
 shared_ptr<Yolo::Infer> engine;
 const auto using_mode = Yolo::Mode::FP16;   // 注意：修改此选项后必须删除原trtmodel才会生效
 const int DEVICE = 0;
-const int BATCH_SIZE = 1;
+const int BATCH_SIZE = 1;                   // 注意：修改此选项后必须删除原trtmodel才会生效（不太需要动）
 const float CONF_THRESH = .5;
 const float NMS_THRESH = .4;
 
@@ -159,7 +159,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr &msg) {
         rc_msgs::detection tmp;
         uint8_t b, g, r;
         tie(b, g, r) = random_color(obj.class_label);
-        cv::rectangle(img, cv::Point(obj.left, obj.top), cv::Point(obj.right, obj.bottom), cv::Scalar(b, g, r), 5);
+        cv::rectangle(img, cv::Point(obj.left, obj.top), cv::Point(obj.right, obj.bottom), cv::Scalar(b, g, r), 2);
         tmp.x1 = obj.left;
         tmp.y1 = obj.top;
         tmp.x2 = obj.right;
