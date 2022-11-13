@@ -25,12 +25,15 @@ from threading import Thread
 import logging
 
 i = 0
+
 path = '/home/stevegao/PycharmProjects/RoboCup/TrainTools/notebooks/shot/nn_%i.jpg'
+# Remember to rename the jpgs as YYYYMMDDNN_%i.jpg
+
 queue = Queue(maxsize=2)
 
 
-def img_to_cv2(color_img):
-    img_msg = color_img
+def img_to_cv2(colour_img, _):
+    img_msg = colour_img
     dtype = np.dtype("uint8")
     dtype = dtype.newbyteorder('>' if img_msg.is_bigendian else '<')
     image_opencv = np.ndarray(shape=(img_msg.height, img_msg.width, 3),
