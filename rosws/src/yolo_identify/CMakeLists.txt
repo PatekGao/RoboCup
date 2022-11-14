@@ -43,8 +43,8 @@ include_directories(
         ${OpenCV_INCLUDE_DIRS}
 )
 
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -O0 -Wfatal-errors -pthread -w -g") # 不需要调试功能后将优化登记改成‘-O3’
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11 -O0 -Xcompiler -fPIC -g -w ${CUDA_GEN_CODE}") # 不需要调试功能后将优化登记改成‘-O3’
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -O3 -Wfatal-errors -pthread -w -g") # 不需要调试功能后将优化登记改成‘-O3’
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11 -O3 -Xcompiler -fPIC -g -w ${CUDA_GEN_CODE}") # 不需要调试功能后将优化登记改成‘-O3’
 file(GLOB_RECURSE cpp_srcs ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE cuda_srcs ${PROJECT_SOURCE_DIR}/src/*.cu)
 
