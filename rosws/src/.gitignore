@@ -3,7 +3,8 @@
 .vscode/
 
 *.engine
-
+*.onnx
+*.trtmodel
 neural_net/src/yolov5.cpp
 
 build/
