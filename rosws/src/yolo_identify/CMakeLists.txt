@@ -71,7 +71,6 @@ target_include_directories(
 
 target_include_directories(
         ${PROJECT_NAME}_node PRIVATE
-        $/home/stevegao/TensorRT-7.2.3.4/include # 这里是tensorrt的include路径，需检查并修改
 )
 
 target_link_libraries(cucodes nvinfer nvonnxparser)
@@ -89,8 +88,8 @@ else() # 如果是x86
     message("embed_platform off")
     include_directories(/usr/local/cuda/include)
     link_directories(/usr/local/cuda/lib64)
-    include_directories(/home/stevegao/TensorRT-7.2.3.4/include) # 这里是tensorrt的路径，需检查并修改
-    link_directories(/home/stevegao/TensorRT-7.2.3.4/lib) # 这里是tensorrt的路径，需检查并修改
+    include_directories(${TENSORRT_DIR}/include)
+    link_directories(${TENSORRT_DIR}/lib)
 endif()
 
 
