@@ -275,6 +275,7 @@ int main(int argc, char **argv) {
     }
     beatRun = false;
     beatThread.join();
+    engine.reset();
     return 0;
 }
 

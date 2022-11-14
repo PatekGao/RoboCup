@@ -84,12 +84,6 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64") # 如果是jetson nano
     message("embed_platform on")
     include_directories(/usr/local/cuda/targets/aarch64-linux/include)
     link_directories(/usr/local/cuda/targets/aarch64-linux/lib)
-else() # 如果是x86
-    message("embed_platform off")
-    include_directories(/usr/local/cuda/include)
-    link_directories(/usr/local/cuda/lib64)
-    include_directories(${TENSORRT_DIR}/include)
-    link_directories(${TENSORRT_DIR}/lib)
 endif()
 
 
