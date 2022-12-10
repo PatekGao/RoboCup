@@ -13,9 +13,9 @@
 
 - mv_driver包：相机驱动模块，用于将深度相机SR300的RGB图像以及深度图像从USB端口接受后实时通过
 rostopic发布出去
-订阅节点：
-发布节点：/cloud, /raw_img, /raw_img_depth
-mv_driver包的实现难点：将SR300中获取到的点云数据，深度图和RGB图像压缩并实时发送到计算平台。
+- 订阅节点：
+- 发布节点：/cloud, /raw_img, /raw_img_depth
+- mv_driver包的实现难点：将SR300中获取到的点云数据，深度图和RGB图像压缩并实时发送到计算平台。
 需要保证低时延，低损耗的特性。
 - 
 - plane_extract包：检测平面，通过接收的mv_driver包的点云数据来进行聚类，在点云数据中提取出桌
