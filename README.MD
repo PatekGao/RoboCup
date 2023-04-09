@@ -1,5 +1,5 @@
 # 面向自动驾驶的目标检测与实现
-![image](https://user-images.githubusercontent.com/99338120/230750911-ed89961c-6889-44b4-80a3-be7db6676193.png)
+
 
 
 - Branch of yolov7.
