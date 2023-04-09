@@ -1,7 +1,9 @@
-# RoboCup
+# 面向自动驾驶的目标检测与实现
+![image](https://user-images.githubusercontent.com/99338120/230750911-ed89961c-6889-44b4-80a3-be7db6676193.png)
+
 
 - Branch of yolov7.
-- A repo of RoboCup.（中国机器人大赛先进视觉赛项）
+- 
 -
 - rosws为项目工程文件，为identify赛项与measure赛项服务.
 - identify赛项分为yolov7与yolov5两个版本
